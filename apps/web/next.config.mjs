@@ -1,3 +1,7 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PRODUCTION_API_ORIGIN = "https://dropmart-7umo.onrender.com";
 
 const isVercel = process.env.VERCEL === "1";
@@ -5,6 +9,8 @@ const productionApiBase = `${PRODUCTION_API_ORIGIN}/api/v1`;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Required for npm workspaces — hoisted deps live in repo root node_modules.
+  outputFileTracingRoot: path.join(__dirname, "../.."),
   transpilePackages: ["three"],
   env: {
     NEXT_PUBLIC_API_URL:
