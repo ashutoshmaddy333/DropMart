@@ -13,12 +13,13 @@
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
+    "types": ["node"],
     "noImplicitAny": true,
     "strictNullChecks": true,
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "prisma/seed.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
