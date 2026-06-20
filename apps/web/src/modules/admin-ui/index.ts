@@ -1,0 +1,9 @@
+export { AdminShell } from "./layout/admin-shell";
+export { AdminSidebarAdvanced } from "./layout/admin-sidebar-advanced";
+export { AdminHeaderAdvanced } from "./layout/admin-header-advanced";
+export { StatCard3D } from "./components/stat-card-3d";
+export { RevenueChart } from "./components/revenue-chart";
+export { ActivityFeed } from "./components/activity-feed";
+export { CommandPalette } from "./components/command-palette";
+export { AnimatedCounter } from "./components/animated-counter";
+export { AdvancedAdminDashboard } from "./pages/advanced-dashboard";

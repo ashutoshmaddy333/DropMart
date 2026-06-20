@@ -1,0 +1,26 @@
+{
+  "name": "dropmart",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api -c blue,green \"npm run dev --workspace=web\" \"npm run dev --workspace=api\"",
+    "dev:web": "npm run dev --workspace=web",
+    "dev:api": "npm run dev --workspace=api",
+    "build": "npm run build --workspace=api && npm run build --workspace=web",
+    "start": "npm run start --workspace=web",
+    "lint": "npm run lint --workspace=web",
+    "db:up": "docker compose up -d",
+    "db:migrate": "npm run prisma:migrate --workspace=api",
+    "db:seed": "npm run prisma:seed --workspace=api"
+  },
+  "overrides": {
+    "@types/react": "18.2.79",
+    "@types/react-dom": "18.2.25"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
