@@ -110,7 +110,10 @@ export class AuthTokensService {
     tokens: AuthTokens & { role: string },
   ) {
     const secure = process.env.COOKIE_SECURE === "true";
-    const common = { sameSite: "lax" as const, secure, path: "/" };
+    const sameSite =
+      (process.env.COOKIE_SAME_SITE as "lax" | "none" | "strict" | undefined) ??
+      (secure ? "none" : "lax");
+    const common = { sameSite, secure, path: "/" };
 
     res.cookie(ACCESS_COOKIE, tokens.accessToken, {
       ...common,
@@ -139,7 +142,10 @@ export class AuthTokensService {
 
   clearAuthCookies(res: Response) {
     const secure = process.env.COOKIE_SECURE === "true";
-    const opts = { path: "/", sameSite: "lax" as const, secure };
+    const sameSite =
+      (process.env.COOKIE_SAME_SITE as "lax" | "none" | "strict" | undefined) ??
+      (secure ? "none" : "lax");
+    const opts = { path: "/", sameSite, secure };
     res.clearCookie(ACCESS_COOKIE, { ...opts, httpOnly: true });
     res.clearCookie(REFRESH_COOKIE, { ...opts, httpOnly: true });
     res.clearCookie(CSRF_COOKIE, opts);
