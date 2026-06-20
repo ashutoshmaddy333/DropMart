@@ -28,7 +28,6 @@ import { isAdminRole, getRoleHomePath } from "@/lib/auth/roles";
 import { CartDrawer } from "@/components/storefront/cart/cart-drawer";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { DesktopNav, MobileNav } from "@/components/storefront/layout/storefront-nav";
-import { cn } from "@/lib/utils";
 
 export function StorefrontHeader() {
   const [searchQuery, setSearchQuery] = useState("");

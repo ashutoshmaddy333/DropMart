@@ -19,7 +19,7 @@ import { SocialLinks } from "@/components/shared/social-links";
 import { useSession } from "@/modules/auth/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { useLogout } from "@/hooks/use-logout";
-import { isAdminRole, getRoleHomePath } from "@/lib/auth/roles";
+import { isAdminRole } from "@/lib/auth/roles";
 import { NAV_CATEGORIES, NAV_LINKS, CONTACT, SITE_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
