@@ -1,4 +1,5 @@
 import type { Product } from "@/modules/products/types";
+import { getServerApiBase } from "./api-base-url";
 
 export interface ApiProduct {
   id: string;
@@ -63,11 +64,6 @@ export function toStorefrontProduct(api: ApiProduct): Product {
     tags: api.tags ?? [],
     reviews: [],
   };
-}
-
-function getServerApiBase() {
-  const proxy = process.env.API_PROXY_URL ?? "http://localhost:4000";
-  return `${proxy}/api/v1`;
 }
 
 export async function fetchProductsServer(params?: {
