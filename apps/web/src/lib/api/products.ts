@@ -1,5 +1,5 @@
 import type { Product } from "@/modules/products/types";
-import { getServerApiBase } from "./api-base-url";
+import { getServerApiBase, SERVER_FETCH_TIMEOUT_MS } from "./api-base-url";
 
 export interface ApiProduct {
   id: string;
@@ -82,6 +82,7 @@ export async function fetchProductsServer(params?: {
   try {
     const res = await fetch(`${getServerApiBase()}/products${qs ? `?${qs}` : ""}`, {
       next: { revalidate: 30 },
+      signal: AbortSignal.timeout(SERVER_FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return [];
     const data = (await res.json()) as ApiProduct[];
@@ -95,6 +96,7 @@ export async function fetchProductBySlugServer(slug: string): Promise<Product | 
   try {
     const res = await fetch(`${getServerApiBase()}/products/${slug}`, {
       next: { revalidate: 30 },
+      signal: AbortSignal.timeout(SERVER_FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     const data = (await res.json()) as ApiProduct;
