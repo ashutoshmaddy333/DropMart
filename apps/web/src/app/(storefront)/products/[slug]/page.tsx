@@ -11,7 +11,7 @@ import {
 import { ProductDetailView } from "@/components/storefront/product/product-detail-view";
 import { fetchProductBySlugServer, fetchProductsServer } from "@/lib/api/products";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface Props {
   params: { slug: string };

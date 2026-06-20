@@ -1,8 +1,4 @@
-import { PRODUCTION_API_ORIGIN } from "../../../config/production-api.js";
-
-const isDeployed =
-  process.env.VERCEL === "1" ||
-  process.env.NODE_ENV === "production";
+export const PRODUCTION_API_ORIGIN = "https://dropmart-7umo.onrender.com";
 
 /** Backend origin for server-side fetches and Next.js rewrites. */
 export function getApiProxyUrl(): string {
@@ -14,6 +10,10 @@ export function getApiProxyUrl(): string {
   if (publicUrl?.startsWith("http")) {
     return publicUrl.replace(/\/api\/v1\/?$/, "");
   }
+
+  const isDeployed =
+    process.env.VERCEL === "1" ||
+    process.env.NODE_ENV === "production";
 
   if (isDeployed) {
     return PRODUCTION_API_ORIGIN;
@@ -31,6 +31,10 @@ export function getClientApiBase(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
+
+  const isDeployed =
+    process.env.VERCEL === "1" ||
+    process.env.NODE_ENV === "production";
 
   if (isDeployed) {
     return `${PRODUCTION_API_ORIGIN}/api/v1`;
@@ -53,5 +57,5 @@ export function getRealtimeUrl(): string {
   return getApiProxyUrl();
 }
 
-/** Prevent Vercel serverless timeouts when Render cold-starts. */
+/** Prevent serverless timeouts when Render cold-starts. */
 export const SERVER_FETCH_TIMEOUT_MS = 8_000;

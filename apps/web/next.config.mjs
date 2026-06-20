@@ -1,4 +1,4 @@
-import { PRODUCTION_API_ORIGIN } from "./config/production-api.js";
+const PRODUCTION_API_ORIGIN = "https://dropmart-7umo.onrender.com";
 
 const isVercel = process.env.VERCEL === "1";
 const productionApiBase = `${PRODUCTION_API_ORIGIN}/api/v1`;
@@ -13,14 +13,12 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_WS_URL ?? (isVercel ? PRODUCTION_API_ORIGIN : undefined),
   },
   async rewrites() {
-    const apiUrl =
-      process.env.API_PROXY_URL?.replace(/\/$/, "") ??
-      (process.env.NEXT_PUBLIC_API_URL?.startsWith("http")
-        ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "")
-        : isVercel
-          ? PRODUCTION_API_ORIGIN
-          : "http://localhost:4000");
+    // Local dev only — production calls Render API directly (no serverless proxy).
+    if (isVercel || process.env.NODE_ENV === "production") {
+      return [];
+    }
 
+    const apiUrl = process.env.API_PROXY_URL?.replace(/\/$/, "") ?? "http://localhost:4000";
     return [
       {
         source: "/api/v1/:path*",
