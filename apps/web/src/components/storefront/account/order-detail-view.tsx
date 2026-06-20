@@ -9,10 +9,8 @@ import { fetchOrderById } from "@/store/slices/ordersSlice";
 import { OrderTrackingPanel } from "@/components/orders/order-tracking-panel";
 import { LiveTrackingMap } from "@/components/tracking/live-tracking-map";
 import { Button } from "@/components/ui/button";
-import { API_BASE } from "@/lib/api/client";
+import { getRealtimeUrl } from "@/lib/api/api-base-url";
 import { formatCurrency } from "@/lib/format";
-
-const WS_URL = API_BASE.replace("/api/v1", "");
 
 export function OrderDetailView({ orderId }: { orderId: string }) {
   const dispatch = useAppDispatch();
@@ -24,7 +22,9 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   }, [dispatch, orderId]);
 
   useEffect(() => {
-    const socket = io(`${WS_URL}/tracking`, { transports: ["websocket"] });
+    const socket = io(`${getRealtimeUrl()}/tracking`, {
+      transports: ["websocket", "polling"],
+    });
     socketRef.current = socket;
     socket.on("connect", () => socket.emit("join_order", orderId));
     socket.on("order_status_update", () => {

@@ -11,7 +11,13 @@ import { TrackingService } from "./tracking.service";
 import { LocationService } from "./location.service";
 
 @Injectable()
-@WebSocketGateway({ cors: { origin: "*" }, namespace: "/tracking" })
+@WebSocketGateway({
+  cors: {
+    origin: process.env.CORS_ORIGIN?.split(",") ?? "*",
+    credentials: true,
+  },
+  namespace: "/tracking",
+})
 export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;

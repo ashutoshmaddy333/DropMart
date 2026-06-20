@@ -5,8 +5,9 @@ import {
   getStoredCsrfToken,
   setAuthSession,
 } from "./auth-session";
+import { getClientApiBase } from "./api-base-url";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
+const API_BASE = getClientApiBase();
 
 export class ApiError extends Error {
   constructor(

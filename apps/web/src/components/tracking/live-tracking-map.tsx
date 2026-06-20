@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { apiFetch, API_BASE } from "@/lib/api/client";
+import { apiFetch } from "@/lib/api/client";
+import { getRealtimeUrl } from "@/lib/api/api-base-url";
 import { setTrackingData, updateLiveLocation, setConnected, clearTracking } from "@/store/slices/trackingSlice";
 import type { TrackingData } from "@/lib/api/types";
 import { GoogleTrackingMap } from "@/components/tracking/google-tracking-map";
@@ -12,8 +13,6 @@ import { TrackingStatusBar } from "@/components/tracking/tracking-status-bar";
 import { Icon } from "@/components/shared/icon";
 import { cn } from "@/lib/utils";
 import { formatDistance } from "@/lib/tracking/geo";
-
-const WS_URL = API_BASE.replace("/api/v1", "");
 
 interface LiveTrackingMapProps {
   orderId: string;
@@ -38,7 +37,9 @@ export function LiveTrackingMap({
         /* public track page may load before assignment exists */
       });
 
-    const socket = io(`${WS_URL}/tracking`, { transports: ["websocket"] });
+    const socket = io(`${getRealtimeUrl()}/tracking`, {
+      transports: ["websocket", "polling"],
+    });
     socketRef.current = socket;
 
     socket.on("connect", () => {
