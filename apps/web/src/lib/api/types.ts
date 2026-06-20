@@ -22,6 +22,45 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface MasterStatus {
+  code: string;
+  label: string;
+  color: string | null;
+}
+
+export interface MasterOrderStatus extends MasterStatus {
+  isFinal: boolean;
+}
+
+export interface MasterCategory {
+  slug: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+}
+
+export interface MasterData {
+  roles: { code: string; label: string; description: string | null }[];
+  permissionGroups: { code: string; label: string; description: string | null }[];
+  permissions: {
+    code: string;
+    label: string;
+    description: string | null;
+    group: string;
+    groupLabel: string;
+  }[];
+  rbacMatrix: { role: string; roleLabel: string; permissions: string[] }[];
+  userStatuses: MasterStatus[];
+  orderStatuses: MasterOrderStatus[];
+  paymentMethods: { code: string; label: string; icon: string | null }[];
+  paymentStatuses: MasterStatus[];
+  supplierStatuses: MasterStatus[];
+  productStatuses: MasterStatus[];
+  deliveryStatuses: MasterStatus[];
+  categories: MasterCategory[];
+  settings: Record<string, string>;
+}
+
 export type { ApiProduct } from "./products";
 export { toStorefrontProduct } from "./products";
 

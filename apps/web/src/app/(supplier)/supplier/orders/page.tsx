@@ -14,16 +14,12 @@ export default function SupplierOrdersPage() {
   const dispatch = useAppDispatch();
   const { items } = useAppSelector((s) => s.orders);
   const { token } = useAppSelector((s) => s.auth);
-  const { data: masters } = useAppSelector((s) => s.masters);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [packingId, setPackingId] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchSupplierOrders());
   }, [dispatch]);
-
-  const statusColor = (code: string) =>
-    masters?.orderStatuses.find((s) => s.code === code)?.color ?? undefined;
 
   async function markPacked(orderId: string) {
     if (!token) return;
@@ -59,7 +55,7 @@ export default function SupplierOrdersPage() {
               <div className="min-w-[120px] font-medium">{o.orderNumber}</div>
               <div className="flex-1 text-sm text-muted-foreground">{o.customerName}</div>
               <div className="font-medium">{formatCurrency(o.total)}</div>
-              <Badge style={{ backgroundColor: statusColor(o.status) ?? undefined }}>
+              <Badge style={{ backgroundColor: o.statusColor ?? undefined }}>
                 {o.statusLabel}
               </Badge>
               {o.waitingFor === "supplier_pack" && (
