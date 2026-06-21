@@ -6,6 +6,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm install && npm run build --workspace=api
+    # postbuild runs prisma migrate deploy + seed automatically
     startCommand: npm run start:prod --workspace=api
     healthCheckPath: /api/v1/masters
     envVars:

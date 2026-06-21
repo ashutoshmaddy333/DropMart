@@ -7,10 +7,12 @@
     "prisma:seed:if-needed": "ts-node prisma/seed-if-needed.ts",
     "prebuild": "npx prisma generate",
     "build": "nest build",
+    "postbuild": "prisma migrate deploy && ts-node prisma/seed-if-needed.ts",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:studio": "prisma studio"
   },
