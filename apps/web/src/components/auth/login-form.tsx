@@ -30,7 +30,7 @@ export function LoginForm() {
     if (login.fulfilled.match(result)) {
       toast.success(`Welcome back, ${result.payload.user.name}!`);
       const home = redirect ?? getRoleHomePath(result.payload.user.role, result.payload.user.supplier?.status);
-      router.push(home);
+      router.replace(home);
     } else {
       toast.error((result.payload as string) ?? "Login failed");
     }

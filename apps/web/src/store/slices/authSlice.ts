@@ -137,7 +137,11 @@ const authSlice = createSlice({
       state.token = action.payload.accessToken;
       state.csrfToken = action.payload.csrfToken;
       state.initialized = true;
-      setAuthSession({ accessToken: action.payload.accessToken, csrfToken: action.payload.csrfToken });
+      setAuthSession({
+        accessToken: action.payload.accessToken,
+        csrfToken: action.payload.csrfToken,
+        role: action.payload.user.role,
+      });
     };
     const handleAuthRejected = (state: AuthState, action: { payload: unknown }) => {
       state.loading = false;
@@ -163,6 +167,7 @@ const authSlice = createSlice({
         state.token = null;
         state.csrfToken = null;
         state.initialized = true;
+        clearAuthSession();
       })
       .addCase(refreshSession.fulfilled, handleAuthFulfilled)
       .addCase(refreshSession.rejected, (state) => {
@@ -170,6 +175,7 @@ const authSlice = createSlice({
         state.token = null;
         state.csrfToken = null;
         state.initialized = true;
+        clearAuthSession();
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;

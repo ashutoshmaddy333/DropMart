@@ -35,8 +35,16 @@ async function tryRefreshTokens(): Promise<boolean> {
         credentials: "include",
       });
       if (!res.ok) return false;
-      const data = await res.json() as { accessToken?: string; csrfToken?: string };
-      setAuthSession({ accessToken: data.accessToken, csrfToken: data.csrfToken });
+      const data = await res.json() as {
+        accessToken?: string;
+        csrfToken?: string;
+        user?: { role?: string };
+      };
+      setAuthSession({
+        accessToken: data.accessToken,
+        csrfToken: data.csrfToken,
+        role: data.user?.role,
+      });
       return true;
     } catch {
       return false;
