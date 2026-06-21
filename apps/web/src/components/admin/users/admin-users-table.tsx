@@ -28,41 +28,61 @@ const DEMO_USERS = [
 
 export function AdminUsersTable() {
   return (
-    <div className="rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {DEMO_USERS.map((user) => (
-            <TableRow key={user.email}>
-              <TableCell className="font-medium">{user.name}</TableCell>
-              <TableCell className="text-muted-foreground">{user.email}</TableCell>
-              <TableCell>
-                <RoleBadge role={user.role} />
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700">
-                  Active
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <PermissionGate require={Permission.UserManage}>
-                  <Button variant="ghost" size="sm">
-                    Edit Role
-                  </Button>
-                </PermissionGate>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <>
+      <div className="space-y-3 md:hidden">
+        {DEMO_USERS.map((user) => (
+          <div key={user.email} className="rounded-xl border bg-card p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium">{user.name}</p>
+                <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+              </div>
+              <RoleBadge role={user.role} />
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700">Active</Badge>
+              <PermissionGate require={Permission.UserManage}>
+                <Button variant="ghost" size="sm">Edit Role</Button>
+              </PermissionGate>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-xl border md:block">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {DEMO_USERS.map((user) => (
+                <TableRow key={user.email}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                  <TableCell>
+                    <RoleBadge role={user.role} />
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700">Active</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <PermissionGate require={Permission.UserManage}>
+                      <Button variant="ghost" size="sm">Edit Role</Button>
+                    </PermissionGate>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </>
   );
 }

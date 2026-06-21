@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Menu } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   DropdownMenu,
@@ -17,6 +18,7 @@ import { CommandPalette } from "../components/command-palette";
 import { AdminNotificationsBell } from "@/components/admin/notifications/admin-notifications-bell";
 import { useSession } from "@/modules/auth/session-context";
 import { useLogout } from "@/hooks/use-logout";
+import { useAdminMobileNav } from "./admin-mobile-nav-context";
 
 interface AdminHeaderAdvancedProps {
   title: string;
@@ -27,6 +29,7 @@ interface AdminHeaderAdvancedProps {
 export function AdminHeaderAdvanced({ title, subtitle, actions }: AdminHeaderAdvancedProps) {
   const { user } = useSession();
   const handleLogout = useLogout();
+  const { toggle } = useAdminMobileNav();
 
   return (
     <>
@@ -34,16 +37,26 @@ export function AdminHeaderAdvanced({ title, subtitle, actions }: AdminHeaderAdv
       <motion.header
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[var(--admin-border)] bg-[rgba(10,10,15,0.8)] px-6 backdrop-blur-xl"
+        className="sticky top-0 z-10 flex h-14 items-center justify-between gap-2 border-b border-[var(--admin-border)] bg-[rgba(10,10,15,0.8)] px-3 backdrop-blur-xl sm:h-16 sm:gap-3 sm:px-4 lg:px-6"
       >
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-          {subtitle && (
-            <p className="text-xs text-[var(--admin-text-muted)]">{subtitle}</p>
-          )}
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={toggle}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] text-[var(--admin-text)] transition-colors hover:bg-[var(--admin-surface-hover)] lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">{title}</h1>
+            {subtitle && (
+              <p className="hidden truncate text-xs text-[var(--admin-text-muted)] sm:block">{subtitle}</p>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
           <button
             type="button"
             onClick={() => {
@@ -81,7 +94,7 @@ export function AdminHeaderAdvanced({ title, subtitle, actions }: AdminHeaderAdv
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600/50 text-xs font-bold text-white">
                   {user.name.charAt(0) || "A"}
                 </div>
-                <span className="max-w-[140px] truncate">{user.name}</span>
+                <span className="hidden max-w-[100px] truncate sm:inline md:max-w-[140px]">{user.name}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

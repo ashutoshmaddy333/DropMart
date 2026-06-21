@@ -12,7 +12,7 @@ export default function AdminProductsPage() {
         title="Product Approval"
         subtitle="Review supplier submissions and publish to storefront"
       />
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <AdminProductsApproval />
       </div>
     </>

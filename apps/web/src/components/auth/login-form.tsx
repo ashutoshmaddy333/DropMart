@@ -75,10 +75,12 @@ export function LoginForm() {
         </p>
       </div>
 
-      <div className="mt-6 rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
+      <div className="mt-6 rounded-xl border bg-muted/30 p-3 text-[11px] leading-relaxed text-muted-foreground sm:p-4 sm:text-xs">
         <p className="font-medium text-foreground">Demo accounts (password: password123)</p>
-        <p className="mt-1">Customer: arjun@gmail.com · Supplier: meera@supplier.in</p>
-        <p>Super Admin: ashutoshkumarm416@gmail.com · Delivery: ravi@delivery.in</p>
+        <p className="mt-1 break-words">Customer: arjun@gmail.com</p>
+        <p className="break-words">Supplier: meera@supplier.in</p>
+        <p className="break-words">Super Admin: ashutoshkumarm416@gmail.com</p>
+        <p className="break-words">Delivery: ravi@delivery.in</p>
       </div>
     </div>
   );

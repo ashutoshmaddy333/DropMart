@@ -82,7 +82,7 @@ export function AdminOrdersTable() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-10 w-[180px] rounded-md border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 text-sm text-[var(--admin-text)]"
+          className="h-10 w-full rounded-md border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 text-sm text-[var(--admin-text)] sm:w-[180px]"
         >
           <option value="all">All Statuses</option>
           <option value="processing">Processing</option>
@@ -97,7 +97,38 @@ export function AdminOrdersTable() {
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
         </div>
       ) : (
-        <div className="admin-glass overflow-hidden rounded-xl">
+        <>
+          <div className="space-y-3 md:hidden">
+            {filtered.map((order) => (
+              <button
+                key={order.id}
+                type="button"
+                onClick={() => setSelectedOrder(order)}
+                className="admin-glass w-full rounded-xl p-4 text-left transition-colors active:bg-[var(--admin-surface-hover)]"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-mono text-sm font-semibold text-indigo-400">{order.orderNumber}</p>
+                    <p className="mt-0.5 truncate text-sm font-medium">{order.customerName}</p>
+                    <p className="text-xs text-muted-foreground">{formatRelativeDate(order.createdAt)}</p>
+                  </div>
+                  <Badge variant="outline" className={cn("shrink-0 capitalize", STATUS_STYLES[order.status])}>
+                    {order.statusLabel}
+                  </Badge>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{order.supplierName}</span>
+                  <span className="font-semibold">{formatCurrency(order.total)}</span>
+                </div>
+              </button>
+            ))}
+            {!filtered.length && (
+              <p className="py-12 text-center text-muted-foreground">No orders found</p>
+            )}
+          </div>
+
+          <div className="admin-glass hidden overflow-hidden rounded-xl md:block">
+            <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -152,10 +183,12 @@ export function AdminOrdersTable() {
               ))}
             </TableBody>
           </Table>
+            </div>
           {!filtered.length && (
             <p className="py-12 text-center text-muted-foreground">No orders found</p>
           )}
         </div>
+        </>
       )}
 
       <OrderDetailSheet order={selectedOrder} onClose={() => setSelectedOrder(null)} />
@@ -186,7 +219,7 @@ function OrderDetailSheet({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="admin-glass admin-gradient-border fixed right-0 top-0 z-50 h-full w-full max-w-lg overflow-y-auto p-6 shadow-2xl"
+            className="admin-glass admin-gradient-border fixed inset-0 z-50 h-full w-full overflow-y-auto p-4 shadow-2xl sm:inset-auto sm:right-0 sm:top-0 sm:max-w-lg sm:p-6"
           >
             <div className="mb-6 flex items-center justify-between">
               <h2 className="font-mono text-lg font-bold text-indigo-400">{order.orderNumber}</h2>

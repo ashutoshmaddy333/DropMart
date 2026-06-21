@@ -13,7 +13,7 @@ export default function AdminDeliveryPage() {
         title="Live Delivery"
         subtitle="Assign delivery partners and enable real-time GPS tracking"
       />
-      <div className="flex-1 space-y-8 overflow-y-auto p-6">
+      <div className="flex-1 space-y-8 overflow-y-auto p-4 sm:p-6">
         <AdminLiveFleetMap />
         <AdminDeliveryPanel />
       </div>

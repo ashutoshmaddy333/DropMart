@@ -10,22 +10,30 @@ import { PermissionGate } from "@/components/shared/permission-gate";
 import { useSession } from "@/modules/auth/session-context";
 import { useLogout } from "@/hooks/use-logout";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ADMIN_NAV, SITE_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { useAdminMobileNav } from "./admin-mobile-nav-context";
 
-export function AdminSidebarAdvanced() {
+interface AdminSidebarNavProps {
+  collapsed?: boolean;
+  onNavigate?: () => void;
+  showCollapseToggle?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export function AdminSidebarNav({
+  collapsed = false,
+  onNavigate,
+  showCollapseToggle = false,
+  onToggleCollapse,
+}: AdminSidebarNavProps) {
   const pathname = usePathname();
   const handleLogout = useLogout();
   const { user } = useSession();
-  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <motion.aside
-      animate={{ width: collapsed ? 72 : 260 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="relative z-20 flex h-screen shrink-0 flex-col border-r border-[var(--admin-border)] bg-[rgba(255,255,255,0.02)] backdrop-blur-xl"
-    >
-      {/* Logo */}
+    <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-3 border-b border-[var(--admin-border)] px-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 shadow-lg shadow-indigo-600/30">
           <Icon name="shopping-bag-solid" size={18} className="invert" />
@@ -43,16 +51,17 @@ export function AdminSidebarAdvanced() {
             </motion.div>
           )}
         </AnimatePresence>
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg text-[var(--admin-text-muted)] transition-colors hover:bg-[var(--admin-surface-hover)] hover:text-[var(--admin-text)]"
-        >
-          {collapsed ? "→" : "←"}
-        </button>
+        {showCollapseToggle && onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg text-[var(--admin-text-muted)] transition-colors hover:bg-[var(--admin-surface-hover)] hover:text-[var(--admin-text)]"
+          >
+            {collapsed ? "→" : "←"}
+          </button>
+        )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {ADMIN_NAV.map((item, i) => {
           const isActive =
@@ -69,6 +78,7 @@ export function AdminSidebarAdvanced() {
             >
               <Link
                 href={item.href}
+                onClick={onNavigate}
                 className={cn("admin-nav-item", isActive && "active")}
                 title={collapsed ? item.label : undefined}
               >
@@ -87,7 +97,10 @@ export function AdminSidebarAdvanced() {
         })}
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={() => {
+            onNavigate?.();
+            void handleLogout();
+          }}
           className={cn(
             "admin-nav-item mt-2 w-full border border-red-500/40 bg-red-500/15 text-red-400 hover:bg-red-500/25 hover:text-red-300",
           )}
@@ -98,7 +111,6 @@ export function AdminSidebarAdvanced() {
         </button>
       </nav>
 
-      {/* User card — always pinned at bottom */}
       <div className="shrink-0 border-t border-[var(--admin-border)] p-3">
         {!collapsed ? (
           <div className="admin-glass rounded-xl p-3">
@@ -108,7 +120,10 @@ export function AdminSidebarAdvanced() {
             <Button
               size="sm"
               className="mt-3 w-full bg-red-600 text-white hover:bg-red-700"
-              onClick={handleLogout}
+              onClick={() => {
+                onNavigate?.();
+                void handleLogout();
+              }}
             >
               Sign Out
             </Button>
@@ -121,7 +136,10 @@ export function AdminSidebarAdvanced() {
             <Button
               size="icon"
               className="h-9 w-9 bg-red-600 text-white hover:bg-red-700"
-              onClick={handleLogout}
+              onClick={() => {
+                onNavigate?.();
+                void handleLogout();
+              }}
               title="Sign Out"
             >
               <Icon name="lock" size={16} />
@@ -130,11 +148,46 @@ export function AdminSidebarAdvanced() {
         )}
         <Link
           href="/"
+          onClick={onNavigate}
           className="mt-2 flex items-center justify-center gap-2 rounded-lg py-2 text-xs text-[var(--admin-text-muted)] transition-colors hover:text-[var(--admin-text)]"
         >
           {!collapsed && "← Back to Store"}
         </Link>
       </div>
+    </div>
+  );
+}
+
+export function AdminMobileSidebar() {
+  const { open, setOpen } = useAdminMobileNav();
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetContent
+        side="left"
+        className="admin-ui flex h-full w-[min(100vw,300px)] flex-col border-[var(--admin-border)] bg-[#0a0a0f] p-0 text-[var(--admin-text)] sm:max-w-[300px]"
+      >
+        <SheetTitle className="sr-only">Admin navigation</SheetTitle>
+        <AdminSidebarNav onNavigate={() => setOpen(false)} />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function AdminSidebarAdvanced() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <motion.aside
+      animate={{ width: collapsed ? 72 : 260 }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className="relative z-20 hidden h-screen shrink-0 flex-col border-r border-[var(--admin-border)] bg-[rgba(255,255,255,0.02)] backdrop-blur-xl lg:flex"
+    >
+      <AdminSidebarNav
+        collapsed={collapsed}
+        showCollapseToggle
+        onToggleCollapse={() => setCollapsed(!collapsed)}
+      />
     </motion.aside>
   );
 }

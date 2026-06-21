@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSession } from "@/modules/auth/session-context";
 import { isAdminRole } from "@/lib/auth/roles";
-import { AdminSidebarAdvanced } from "./admin-sidebar-advanced";
+import { AdminSidebarAdvanced, AdminMobileSidebar } from "./admin-sidebar-advanced";
+import { AdminMobileNavProvider } from "./admin-mobile-nav-context";
 import "../theme/admin-theme.css";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -31,12 +32,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="admin-ui flex min-h-screen">
-      <div className="admin-bg-mesh" />
-      <AdminSidebarAdvanced />
-      <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
-        {children}
+    <AdminMobileNavProvider>
+      <div className="admin-ui flex min-h-screen">
+        <div className="admin-bg-mesh" />
+        <AdminMobileSidebar />
+        <AdminSidebarAdvanced />
+        <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
+          {children}
+        </div>
       </div>
-    </div>
+    </AdminMobileNavProvider>
   );
 }
