@@ -76,6 +76,7 @@ export class EmailOtpService {
 
     if (!sent) {
       this.logger.warn(`[OTP] Email delivery failed for ${email}`);
+      const smtpError = this.mail.getLastError();
       if (isDev) {
         this.logger.warn(`[DEV OTP] ${email} → ${otp} (valid ${OTP_TTL_SECONDS / 60} min)`);
         return {
@@ -87,7 +88,9 @@ export class EmailOtpService {
         };
       }
       throw new ServiceUnavailableException(
-        "Could not send verification email. Check SMTP settings on the server or try again later.",
+        smtpError
+          ? `Could not send verification email: ${smtpError}`
+          : "Could not send verification email. Check SMTP settings on the server or try again later.",
       );
     }
 
