@@ -39,7 +39,7 @@ import type { Permission } from "@/modules/rbac/permissions";
 export const ADMIN_NAV: {
   label: string;
   href: string;
-  icon: "chart-bar" | "shopping-cart" | "cube" | "users" | "lock" | "settings" | "bell" | "truck";
+  icon: "chart-bar" | "shopping-cart" | "cube" | "users" | "lock" | "settings" | "bell" | "truck" | "bolt";
   permission: Permission | null;
 }[] = [
   { label: "Dashboard", href: "/admin", icon: "chart-bar", permission: null },
@@ -49,7 +49,8 @@ export const ADMIN_NAV: {
   { label: "Suppliers", href: "/admin/suppliers", icon: "users", permission: "supplier:verify" as Permission },
   { label: "Notifications", href: "/admin/notifications", icon: "bell", permission: null },
   { label: "Users", href: "/admin/users", icon: "users", permission: "user:manage" as Permission },
-  { label: "RBAC", href: "/admin/rbac", icon: "lock", permission: "rbac:manage" as Permission },
+  { label: "Roles", href: "/admin/roles", icon: "lock", permission: "rbac:manage" as Permission },
+  { label: "Rights", href: "/admin/rights", icon: "bolt", permission: "rbac:manage" as Permission },
   { label: "Settings", href: "/admin/settings", icon: "settings", permission: "platform:config" as Permission },
 ];
 

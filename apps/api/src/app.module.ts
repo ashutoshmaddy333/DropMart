@@ -14,6 +14,7 @@ import { RedisModule } from "./redis/redis.module";
 import { DeliveryModule } from "./modules/delivery/delivery.module";
 import { PaymentsModule } from "./modules/payments/payments.module";
 import { EventsModule } from "./modules/events/events.module";
+import { RbacModule } from "./modules/rbac/rbac.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { EventsModule } from "./modules/events/events.module";
     EventsModule,
     AuthModule,
     MastersModule,
+    RbacModule,
     SuppliersModule,
     ProductsModule,
     OrdersModule,

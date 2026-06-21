@@ -78,7 +78,7 @@ export function AdminHeaderAdvanced({ title, subtitle, actions }: AdminHeaderAdv
           {actions}
 
           <Link
-            href="/admin/rbac"
+            href="/admin/roles"
             className="hidden rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-400 transition-colors hover:bg-indigo-500/20 sm:inline-flex"
           >
             RBAC

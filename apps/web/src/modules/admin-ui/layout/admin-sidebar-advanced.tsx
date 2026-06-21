@@ -95,20 +95,6 @@ export function AdminSidebarNav({
             </PermissionGate>
           );
         })}
-        <button
-          type="button"
-          onClick={() => {
-            onNavigate?.();
-            void handleLogout();
-          }}
-          className={cn(
-            "admin-nav-item mt-2 w-full border border-red-500/40 bg-red-500/15 text-red-400 hover:bg-red-500/25 hover:text-red-300",
-          )}
-          title="Sign Out"
-        >
-          <Icon name="lock" size={18} />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
       </nav>
 
       <div className="shrink-0 border-t border-[var(--admin-border)] p-3">

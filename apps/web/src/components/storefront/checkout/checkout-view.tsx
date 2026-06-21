@@ -56,6 +56,13 @@ export function CheckoutView() {
   const shipping = subtotal() >= 999 ? 0 : 49;
   const total = subtotal() + shipping;
 
+  const checkoutButtonLabel = (() => {
+    if (loading) return "Processing...";
+    if (paymentMethod === "cod") return `Place Order · ${formatCurrency(total)} COD`;
+    if (paymentMethod === "razorpay_qr") return `Pay ${formatCurrency(total)} via QR`;
+    return `Pay ${formatCurrency(total)}`;
+  })();
+
   const checkPincode = () => {
     setServiceable(pincode.length === 6 && /^\d{6}$/.test(pincode));
     setAddress((a) => ({ ...a, pincode }));
@@ -313,11 +320,13 @@ export function CheckoutView() {
           onClick={handlePay}
         >
           <Icon name="shield-check" size={18} className="mr-2 invert dark:invert" />
-          {loading ? "Processing..." : `Pay ${formatCurrency(total)}`}
+          {checkoutButtonLabel}
         </Button>
         <p className="mt-3 flex items-center justify-center gap-1 text-xs text-muted-foreground">
           <Icon name="lock" size={12} />
-          Secured by Razorpay · HMAC verified webhooks
+          {paymentMethod === "cod"
+            ? "Pay cash when your order is delivered"
+            : "Secured by Razorpay · HMAC verified webhooks"}
         </p>
       </div>
     </div>
