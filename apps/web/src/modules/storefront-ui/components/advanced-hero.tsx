@@ -9,13 +9,14 @@ import { MagneticButton } from "../animations/magnetic-button";
 import { fadeInUp, slideInLeft, slideInRight } from "../animations/scroll-reveal";
 import { useMounted } from "@/hooks/use-mounted";
 
-const Hero3DScene = dynamic(
-  () => import("../three/hero-3d-scene").then((m) => m.Hero3DScene),
+const HeroGenerativeScene = dynamic(
+  () => import("../effects/hero-generative-scene").then((m) => m.HeroGenerativeScene),
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="h-32 w-32 animate-pulse rounded-2xl bg-white/5 ring-1 ring-white/10" />
+      <div className="relative h-full w-full overflow-hidden">
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-emerald-500/10 via-transparent to-indigo-500/10" />
+        <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/20 blur-3xl" />
       </div>
     ),
   }
@@ -133,18 +134,18 @@ export function AdvancedHeroBanner() {
           </motion.div>
         </div>
 
-        {/* 3D */}
+        {/* Generative logistics visualization */}
         <motion.div
           initial={motionInitial}
           animate="visible"
           variants={slideInRight}
           transition={{ delay: 0.2 }}
-          className="relative h-[300px] md:h-[480px]"
+          className="relative h-[320px] md:h-[480px]"
         >
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="h-64 w-64 rounded-full bg-brand/10 blur-3xl" />
+          <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-transparent to-indigo-500/10 blur-2xl" />
+          <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-2xl shadow-emerald-500/10 backdrop-blur-sm">
+            <HeroGenerativeScene className="relative h-full w-full" />
           </div>
-          <Hero3DScene className="relative h-full w-full" />
         </motion.div>
       </div>
 

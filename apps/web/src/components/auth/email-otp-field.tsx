@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,9 +26,10 @@ export function EmailOtpField({
   onOtpChange,
   disabled,
 }: EmailOtpFieldProps) {
-  const [sending, setSending] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const lastSentEmail = useRef("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -35,61 +37,98 @@ export function EmailOtpField({
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  async function sendOtp() {
+  function sendOtpOptimistic(trimmed: string, silent = false) {
+    if (countdown > 0 && trimmed === lastSentEmail.current) return;
+
+    lastSentEmail.current = trimmed;
+    onEmailChange(trimmed);
+    setOtpSent(true);
+    setCountdown(60);
+
+    if (!silent) {
+      toast.success("Code sent!", { description: trimmed, duration: 2500 });
+    }
+
+    void apiFetch("/auth/otp/send", {
+      method: "POST",
+      skipCsrf: true,
+      body: JSON.stringify({ email: trimmed }),
+    }).catch((err: unknown) => {
+      setOtpSent(false);
+      setCountdown(0);
+      lastSentEmail.current = "";
+      toast.error(err instanceof Error ? err.message : "Failed to send code — tap Resend");
+    });
+  }
+
+  function handleSendClick() {
     const trimmed = email.trim().toLowerCase();
     if (!EMAIL_PATTERN.test(trimmed)) {
       toast.error("Enter a valid email address");
       return;
     }
-
-    setSending(true);
-    try {
-      await apiFetch("/auth/otp/send", {
-        method: "POST",
-        skipCsrf: true,
-        body: JSON.stringify({ email: trimmed }),
-      });
-      setOtpSent(true);
-      setCountdown(60);
-      onEmailChange(trimmed);
-      toast.success("Verification code sent", { description: `Check ${trimmed}` });
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to send code");
-    } finally {
-      setSending(false);
-    }
+    sendOtpOptimistic(trimmed);
   }
+
+  function handleEmailBlur() {
+    const trimmed = email.trim().toLowerCase();
+    if (!EMAIL_PATTERN.test(trimmed) || otpSent) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => sendOtpOptimistic(trimmed, true), 300);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const buttonLabel =
+    countdown > 0 ? `${countdown}s` : otpSent ? "Resend" : "Send OTP";
 
   return (
     <div className="space-y-4 rounded-xl border border-brand/20 bg-brand/5 p-4">
       <div>
         <p className="text-sm font-medium">Email Verification</p>
-        <p className="text-xs text-muted-foreground">We&apos;ll send a 6-digit code to verify your email</p>
+        <p className="text-xs text-muted-foreground">
+          Enter your email — we&apos;ll send a 6-digit code instantly
+        </p>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="register-email">Email *</Label>
         <div className="flex gap-2">
-          <Input
-            id="register-email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => {
-              onEmailChange(e.target.value);
-              setOtpSent(false);
-            }}
-            required
-            disabled={disabled}
-          />
+          <div className="relative flex-1">
+            <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="register-email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => {
+                onEmailChange(e.target.value);
+                if (e.target.value.trim().toLowerCase() !== lastSentEmail.current) {
+                  setOtpSent(false);
+                  setCountdown(0);
+                }
+              }}
+              onBlur={handleEmailBlur}
+              required
+              disabled={disabled}
+              className="pl-9"
+            />
+          </div>
           <Button
             type="button"
             variant="outline"
-            className="shrink-0"
-            disabled={disabled || sending || countdown > 0 || !email.trim()}
-            onClick={sendOtp}
+            className="shrink-0 min-w-[100px]"
+            disabled={disabled || countdown > 0 || !email.trim()}
+            onClick={handleSendClick}
           >
-            {sending ? "Sending..." : countdown > 0 ? `${countdown}s` : otpSent ? "Resend" : "Send OTP"}
+            {otpSent && countdown > 0 ? (
+              <Check className="mr-1.5 h-4 w-4 text-emerald-600" />
+            ) : null}
+            {buttonLabel}
           </Button>
         </div>
       </div>
@@ -101,15 +140,22 @@ export function EmailOtpField({
           inputMode="numeric"
           pattern="\d{6}"
           maxLength={6}
-          placeholder="6-digit code"
+          placeholder="000000"
           value={otp}
           onChange={(e) => onOtpChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
           required
           disabled={disabled}
-          className={cn("tracking-[0.3em] font-mono text-lg", otp.length === 6 && "border-brand")}
+          autoComplete="one-time-code"
+          className={cn(
+            "text-center tracking-[0.45em] font-mono text-xl",
+            otp.length === 6 && "border-brand ring-1 ring-brand/30",
+          )}
         />
         {otpSent && (
-          <p className="text-xs text-emerald-600">Code sent — expires in 10 minutes</p>
+          <p className="flex items-center gap-1.5 text-xs text-emerald-600">
+            <Check className="h-3.5 w-3.5" />
+            Code on its way — expires in 10 minutes
+          </p>
         )}
       </div>
     </div>
