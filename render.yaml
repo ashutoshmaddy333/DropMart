@@ -1,0 +1,27 @@
+# Render Blueprint — API backend only.
+# Frontend deploys on Vercel (apps/web).
+services:
+  - type: web
+    name: dropmart-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build --workspace=api
+    startCommand: npm run start:prod --workspace=api
+    healthCheckPath: /api/v1/masters
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        value: https://drop-mart-api-elxn.vercel.app
+      - key: ADMIN_APP_URL
+        value: https://drop-mart-api-elxn.vercel.app
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: REDIS_URL
+        sync: false
