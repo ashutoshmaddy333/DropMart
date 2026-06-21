@@ -502,6 +502,17 @@ model PlatformSetting {
   @@map("platform_settings")
 }
 
+// ─── Registration email OTP (persists across API restarts / multi-instance) ───
+
+model RegistrationOtp {
+  email      String   @id
+  hash       String
+  expiresAt  DateTime
+  lastSentAt DateTime @default(now())
+
+  @@map("registration_otps")
+}
+
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 model Notification {
