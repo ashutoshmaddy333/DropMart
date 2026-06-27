@@ -5,7 +5,7 @@ import { Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ interface OtpSendResponse {
   success: boolean;
   message: string;
   expiresIn: number;
+  retryAfter?: number;
   emailSent?: boolean;
   devOtp?: string;
 }
@@ -39,8 +40,8 @@ export function EmailOtpField({
   const [countdown, setCountdown] = useState(0);
   const [justSent, setJustSent] = useState(false);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+  const [inFlight, setInFlight] = useState(false);
   const lastSentEmail = useRef("");
-  const inFlightRef = useRef(false);
   const justSentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -55,16 +56,19 @@ export function EmailOtpField({
     };
   }, []);
 
-  function markSentOptimistic(trimmed: string) {
+  function showSentState(trimmed: string) {
     lastSentEmail.current = trimmed;
     onEmailChange(trimmed);
     setOtpSent(true);
-    setCountdown(60);
     setJustSent(true);
     setDevOtpHint(null);
 
     if (justSentTimerRef.current) clearTimeout(justSentTimerRef.current);
     justSentTimerRef.current = setTimeout(() => setJustSent(false), 2500);
+  }
+
+  function startCooldown(seconds: number) {
+    setCountdown(Math.max(1, seconds));
   }
 
   async function sendOtp() {
@@ -74,10 +78,10 @@ export function EmailOtpField({
       return;
     }
     if (countdown > 0 && trimmed === lastSentEmail.current) return;
-    if (inFlightRef.current) return;
+    if (inFlight) return;
 
-    markSentOptimistic(trimmed);
-    inFlightRef.current = true;
+    showSentState(trimmed);
+    setInFlight(true);
 
     try {
       const res = await apiFetch<OtpSendResponse>("/auth/otp/send", {
@@ -87,27 +91,44 @@ export function EmailOtpField({
         body: JSON.stringify({ email: trimmed }),
       });
 
+      startCooldown(res.retryAfter ?? 60);
+
       if (res.devOtp) {
         setDevOtpHint(res.devOtp);
         toast.success("Dev mode: code shown below");
       }
     } catch (err: unknown) {
-      setCountdown(0);
+      if (err instanceof ApiError && err.status === 429) {
+        startCooldown(err.retryAfter ?? 60);
+        setOtpSent(true);
+        toast.message(err.message);
+        return;
+      }
+
       setOtpSent(false);
       setJustSent(false);
-      toast.error(err instanceof Error ? err.message : "Failed to send code — tap Resend to try again");
+      setCountdown(0);
+      toast.error(err instanceof Error ? err.message : "Failed to send code — tap Send OTP to try again");
     } finally {
-      inFlightRef.current = false;
+      setInFlight(false);
     }
   }
 
   const buttonLabel = justSent
     ? "Sent"
-    : countdown > 0
-      ? `${countdown}s`
-      : otpSent
-        ? "Resend"
-        : "Send OTP";
+    : inFlight
+      ? "Sent"
+      : countdown > 0
+        ? `${countdown}s`
+        : otpSent
+          ? "Resend"
+          : "Send OTP";
+
+  const buttonDisabled =
+    disabled ||
+    inFlight ||
+    (countdown > 0 && email.trim().toLowerCase() === lastSentEmail.current) ||
+    !email.trim();
 
   return (
     <div className="space-y-4 rounded-xl border border-brand/20 bg-brand/5 p-3 sm:p-4">
@@ -146,14 +167,10 @@ export function EmailOtpField({
             type="button"
             variant="outline"
             className="w-full shrink-0 sm:w-auto sm:min-w-[120px]"
-            disabled={
-              disabled ||
-              (countdown > 0 && email.trim().toLowerCase() === lastSentEmail.current) ||
-              !email.trim()
-            }
+            disabled={buttonDisabled}
             onClick={() => void sendOtp()}
           >
-            {(justSent || (otpSent && countdown > 0)) && (
+            {(justSent || otpSent) && (
               <Check className="mr-1.5 h-4 w-4 text-emerald-600" />
             )}
             {buttonLabel}

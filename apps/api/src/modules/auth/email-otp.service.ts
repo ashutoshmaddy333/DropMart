@@ -54,12 +54,6 @@ export class EmailOtpService {
     const hash = await bcrypt.hash(otp, 10);
     const expiresAt = new Date(Date.now() + OTP_TTL_SECONDS * 1000);
 
-    await this.prisma.registrationOtp.upsert({
-      where: { email },
-      create: { email, hash, expiresAt, lastSentAt: new Date() },
-      update: { hash, expiresAt, lastSentAt: new Date() },
-    });
-
     const emailContent = registrationOtpEmail({
       otp,
       expiresMinutes: OTP_TTL_SECONDS / 60,
@@ -79,10 +73,12 @@ export class EmailOtpService {
       const smtpError = this.mail.getLastError();
       if (isDev) {
         this.logger.warn(`[DEV OTP] ${email} → ${otp} (valid ${OTP_TTL_SECONDS / 60} min)`);
+        await this.persistOtp(email, hash, expiresAt);
         return {
           success: true,
           message: "Verification code generated (check API logs — SMTP not configured)",
           expiresIn: OTP_TTL_SECONDS,
+          retryAfter: RATE_LIMIT_SECONDS,
           emailSent: false,
           devOtp: otp,
         };
@@ -94,10 +90,13 @@ export class EmailOtpService {
       );
     }
 
+    await this.persistOtp(email, hash, expiresAt);
+
     return {
       success: true,
       message: "Verification code sent to your email",
       expiresIn: OTP_TTL_SECONDS,
+      retryAfter: RATE_LIMIT_SECONDS,
       emailSent: true,
     };
   }
@@ -125,6 +124,14 @@ export class EmailOtpService {
     return true;
   }
 
+  private async persistOtp(email: string, hash: string, expiresAt: Date) {
+    await this.prisma.registrationOtp.upsert({
+      where: { email },
+      create: { email, hash, expiresAt, lastSentAt: new Date() },
+      update: { hash, expiresAt, lastSentAt: new Date() },
+    });
+  }
+
   private async enforceRateLimit(email: string) {
     const existing = await this.prisma.registrationOtp.findUnique({ where: { email } });
     if (!existing) return;
@@ -133,7 +140,11 @@ export class EmailOtpService {
     if (elapsed < RATE_LIMIT_SECONDS * 1000) {
       const waitSec = Math.ceil((RATE_LIMIT_SECONDS * 1000 - elapsed) / 1000);
       throw new HttpException(
-        `Please wait ${waitSec}s before requesting another code`,
+        {
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          message: `Please wait ${waitSec}s before requesting another code`,
+          retryAfter: waitSec,
+        },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

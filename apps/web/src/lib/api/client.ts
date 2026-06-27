@@ -11,6 +11,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    public retryAfter?: number,
   ) {
     super(message);
     this.name = "ApiError";
@@ -117,8 +118,17 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ message: res.statusText }));
-    throw new ApiError(res.status, body.message ?? "Request failed");
+    const body = (await res.json().catch(() => ({ message: res.statusText }))) as {
+      message?: string | string[];
+      retryAfter?: number;
+    };
+    const message = Array.isArray(body.message)
+      ? body.message.join(", ")
+      : (body.message ?? res.statusText);
+    const retryMatch = typeof message === "string" ? message.match(/wait (\d+)s/i) : null;
+    const retryAfter =
+      body.retryAfter ?? (retryMatch ? Number(retryMatch[1]) : undefined);
+    throw new ApiError(res.status, message, retryAfter);
   }
 
   const text = await res.text();
