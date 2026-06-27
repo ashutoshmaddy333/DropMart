@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -199,8 +198,8 @@ export function StorefrontFooter() {
             India&apos;s smart dropshipping marketplace. Fast delivery from nearby warehouses.
           </p>
           <div className="flex items-center gap-3">
-            <Image src="/icons/razorpay.png" alt="Razorpay" width={60} height={24} />
-            <Image src="/icons/stripe.png" alt="Stripe" width={48} height={24} />
+            <Icon name="razorpay" size={60} className="h-6 w-[60px] object-contain" alt="Razorpay" />
+            <Icon name="stripe" size={48} className="h-6 w-12 object-contain" alt="Stripe" />
           </div>
           <SocialLinks size={20} className="pt-1" />
         </div>

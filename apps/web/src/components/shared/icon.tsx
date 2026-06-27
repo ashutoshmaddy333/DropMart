@@ -53,13 +53,15 @@ const SVG_ICONS: IconName[] = [
   "lock",
   "bolt",
   "shopping-bag-solid",
+  "razorpay",
+  "stripe",
   "instagram",
   "whatsapp",
   "phone",
   "mail",
 ];
 
-const BRAND_ICONS: IconName[] = ["instagram", "whatsapp"];
+const BRAND_ICONS: IconName[] = ["instagram", "whatsapp", "razorpay", "stripe"];
 
 export function Icon({ name, size = 20, className, alt }: IconProps) {
   const isSvg = SVG_ICONS.includes(name);
