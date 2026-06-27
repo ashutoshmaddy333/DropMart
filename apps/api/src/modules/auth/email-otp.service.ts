@@ -66,6 +66,10 @@ export class EmailOtpService {
       text: emailContent.text,
     });
 
+    this.logger.log(
+      `[OTP] send attempt email=${email} smtpSent=${sent} smtpError=${this.mail.getLastError() ?? "none"}`,
+    );
+
     const isDev = process.env.NODE_ENV !== "production";
 
     if (!sent) {

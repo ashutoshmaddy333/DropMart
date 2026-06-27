@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, apiFetch } from "@/lib/api/client";
+import { getClientApiBase } from "@/lib/api/api-base-url";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const OTP_TIMEOUT_MS = 120_000;
+
+const OTP_LOG = "[DropMart OTP]";
 
 interface OtpSendResponse {
   success: boolean;
@@ -41,6 +44,10 @@ export function EmailOtpField({
   const [justSent, setJustSent] = useState(false);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [inFlight, setInFlight] = useState(false);
+  const [sendStatus, setSendStatus] = useState<{
+    type: "success" | "error" | "rate-limit" | "pending";
+    message: string;
+  } | null>(null);
   const lastSentEmail = useRef("");
   const justSentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -82,6 +89,11 @@ export function EmailOtpField({
 
     showSentState(trimmed);
     setInFlight(true);
+    setSendStatus({ type: "pending", message: "Sending code to your email…" });
+
+    const apiUrl = `${getClientApiBase()}/auth/otp/send`;
+    const startedAt = performance.now();
+    console.info(`${OTP_LOG} Request started`, { email: trimmed, url: apiUrl });
 
     try {
       const res = await apiFetch<OtpSendResponse>("/auth/otp/send", {
@@ -91,24 +103,55 @@ export function EmailOtpField({
         body: JSON.stringify({ email: trimmed }),
       });
 
+      const elapsedMs = Math.round(performance.now() - startedAt);
       startCooldown(res.retryAfter ?? 60);
 
-      if (res.devOtp) {
+      if (res.emailSent) {
+        const msg = `Email sent successfully to ${trimmed} (${elapsedMs}ms)`;
+        setSendStatus({ type: "success", message: msg });
+        console.info(`${OTP_LOG} SUCCESS`, { ...res, elapsedMs, email: trimmed });
+        toast.success("OTP sent!", { description: `Check ${trimmed} and spam folder` });
+      } else if (res.devOtp) {
         setDevOtpHint(res.devOtp);
+        setSendStatus({ type: "success", message: `Dev OTP generated (${elapsedMs}ms)` });
+        console.info(`${OTP_LOG} DEV SUCCESS`, { ...res, elapsedMs, email: trimmed });
         toast.success("Dev mode: code shown below");
+      } else {
+        const msg = res.message || "Server accepted request but email status unknown";
+        setSendStatus({ type: "success", message: msg });
+        console.warn(`${OTP_LOG} OK but emailSent=false`, { ...res, elapsedMs });
+        toast.message(msg);
       }
     } catch (err: unknown) {
+      const elapsedMs = Math.round(performance.now() - startedAt);
+
       if (err instanceof ApiError && err.status === 429) {
         startCooldown(err.retryAfter ?? 60);
         setOtpSent(true);
-        toast.message(err.message);
+        const msg = err.message;
+        setSendStatus({ type: "rate-limit", message: msg });
+        console.warn(`${OTP_LOG} RATE LIMITED (429)`, {
+          email: trimmed,
+          retryAfter: err.retryAfter,
+          elapsedMs,
+          message: err.message,
+        });
+        toast.message(msg);
         return;
       }
 
       setOtpSent(false);
       setJustSent(false);
       setCountdown(0);
-      toast.error(err instanceof Error ? err.message : "Failed to send code — tap Send OTP to try again");
+      const msg = err instanceof Error ? err.message : "Failed to send code";
+      setSendStatus({ type: "error", message: msg });
+      console.error(`${OTP_LOG} FAILED`, {
+        email: trimmed,
+        elapsedMs,
+        error: err,
+        status: err instanceof ApiError ? err.status : undefined,
+      });
+      toast.error(msg);
     } finally {
       setInFlight(false);
     }
@@ -156,6 +199,7 @@ export function EmailOtpField({
                   setCountdown(0);
                   setJustSent(false);
                   setDevOtpHint(null);
+                  setSendStatus(null);
                 }
               }}
               required
@@ -176,6 +220,25 @@ export function EmailOtpField({
             {buttonLabel}
           </Button>
         </div>
+        {sendStatus && (
+          <p
+            className={cn(
+              "rounded-lg px-3 py-2 text-xs",
+              sendStatus.type === "success" && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+              sendStatus.type === "pending" && "bg-muted text-muted-foreground",
+              sendStatus.type === "rate-limit" && "bg-amber-500/10 text-amber-800 dark:text-amber-200",
+              sendStatus.type === "error" && "bg-destructive/10 text-destructive",
+            )}
+          >
+            {sendStatus.type === "success" && "✓ "}
+            {sendStatus.type === "error" && "✗ "}
+            {sendStatus.type === "rate-limit" && "⏳ "}
+            {sendStatus.message}
+            <span className="mt-1 block text-[10px] opacity-70">
+              Open browser console (F12) and filter &quot;DropMart OTP&quot; for full details.
+            </span>
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
