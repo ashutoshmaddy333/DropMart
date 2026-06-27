@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Loader2, Mail } from "lucide-react";
+import { Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,11 +37,11 @@ export function EmailOtpField({
 }: EmailOtpFieldProps) {
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [sending, setSending] = useState(false);
-  const [sendPhase, setSendPhase] = useState<"idle" | "connecting" | "waking">("idle");
+  const [justSent, setJustSent] = useState(false);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const lastSentEmail = useRef("");
-  const slowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlightRef = useRef(false);
+  const justSentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -51,9 +51,21 @@ export function EmailOtpField({
 
   useEffect(() => {
     return () => {
-      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+      if (justSentTimerRef.current) clearTimeout(justSentTimerRef.current);
     };
   }, []);
+
+  function markSentOptimistic(trimmed: string) {
+    lastSentEmail.current = trimmed;
+    onEmailChange(trimmed);
+    setOtpSent(true);
+    setCountdown(60);
+    setJustSent(true);
+    setDevOtpHint(null);
+
+    if (justSentTimerRef.current) clearTimeout(justSentTimerRef.current);
+    justSentTimerRef.current = setTimeout(() => setJustSent(false), 2500);
+  }
 
   async function sendOtp() {
     const trimmed = email.trim().toLowerCase();
@@ -61,13 +73,11 @@ export function EmailOtpField({
       toast.error("Enter a valid email address");
       return;
     }
-    if (sending) return;
     if (countdown > 0 && trimmed === lastSentEmail.current) return;
+    if (inFlightRef.current) return;
 
-    setSending(true);
-    setSendPhase("connecting");
-    setDevOtpHint(null);
-    slowTimerRef.current = setTimeout(() => setSendPhase("waking"), 6000);
+    markSentOptimistic(trimmed);
+    inFlightRef.current = true;
 
     try {
       const res = await apiFetch<OtpSendResponse>("/auth/otp/send", {
@@ -77,30 +87,22 @@ export function EmailOtpField({
         body: JSON.stringify({ email: trimmed }),
       });
 
-      lastSentEmail.current = trimmed;
-      onEmailChange(trimmed);
-      setOtpSent(true);
-      setCountdown(60);
-
       if (res.devOtp) {
         setDevOtpHint(res.devOtp);
         toast.success("Dev mode: code shown below");
-      } else {
-        toast.success("Code sent!", { description: `Check ${trimmed} (and spam folder)` });
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to send code");
+      setCountdown(0);
+      setOtpSent(false);
+      setJustSent(false);
+      toast.error(err instanceof Error ? err.message : "Failed to send code — tap Resend to try again");
     } finally {
-      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
-      setSending(false);
-      setSendPhase("idle");
+      inFlightRef.current = false;
     }
   }
 
-  const buttonLabel = sending
-    ? sendPhase === "waking"
-      ? "Waking server…"
-      : "Connecting…"
+  const buttonLabel = justSent
+    ? "Sent"
     : countdown > 0
       ? `${countdown}s`
       : otpSent
@@ -131,6 +133,7 @@ export function EmailOtpField({
                 if (e.target.value.trim().toLowerCase() !== lastSentEmail.current) {
                   setOtpSent(false);
                   setCountdown(0);
+                  setJustSent(false);
                   setDevOtpHint(null);
                 }
               }}
@@ -145,25 +148,17 @@ export function EmailOtpField({
             className="w-full shrink-0 sm:w-auto sm:min-w-[120px]"
             disabled={
               disabled ||
-              sending ||
               (countdown > 0 && email.trim().toLowerCase() === lastSentEmail.current) ||
               !email.trim()
             }
             onClick={() => void sendOtp()}
           >
-            {sending ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : otpSent && countdown > 0 ? (
+            {(justSent || (otpSent && countdown > 0)) && (
               <Check className="mr-1.5 h-4 w-4 text-emerald-600" />
-            ) : null}
+            )}
             {buttonLabel}
           </Button>
         </div>
-        {sending && sendPhase === "waking" && (
-          <p className="text-xs text-muted-foreground">
-            Free-tier server is waking up — this can take up to 2 minutes on first request.
-          </p>
-        )}
       </div>
 
       <div className="space-y-2">
@@ -180,7 +175,7 @@ export function EmailOtpField({
           disabled={disabled}
           autoComplete="one-time-code"
           className={cn(
-            "text-center tracking-[0.35em] font-mono text-lg sm:text-xl sm:tracking-[0.45em]",
+            "text-center font-mono text-lg tracking-[0.35em] sm:text-xl sm:tracking-[0.45em]",
             otp.length === 6 && "border-brand ring-1 ring-brand/30",
           )}
         />
@@ -192,7 +187,7 @@ export function EmailOtpField({
         {otpSent && !devOtpHint && (
           <p className="flex items-center gap-1.5 text-xs text-emerald-600">
             <Check className="h-3.5 w-3.5 shrink-0" />
-            Check inbox &amp; spam — code expires in 10 minutes
+            Code sent — check inbox &amp; spam (expires in 10 minutes)
           </p>
         )}
       </div>
