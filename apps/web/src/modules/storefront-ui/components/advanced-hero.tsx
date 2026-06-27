@@ -6,21 +6,25 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/shared/icon";
 import { MagneticButton } from "../animations/magnetic-button";
-import { fadeInUp, slideInLeft, slideInRight } from "../animations/scroll-reveal";
+import { fadeInUp, slideInLeft } from "../animations/scroll-reveal";
 import { useMounted } from "@/hooks/use-mounted";
 
 const HeroGenerativeScene = dynamic(
   () => import("../effects/hero-generative-scene").then((m) => m.HeroGenerativeScene),
   {
     ssr: false,
-    loading: () => (
-      <div className="relative h-full w-full overflow-hidden">
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-emerald-500/10 via-transparent to-indigo-500/10" />
-        <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/20 blur-3xl" />
-      </div>
-    ),
+    loading: () => <HeroStaticLoading />,
   }
 );
+
+function HeroStaticLoading() {
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-emerald-900/40 via-slate-900 to-indigo-900/30">
+      <div className="absolute inset-0 animate-pulse bg-[radial-gradient(ellipse_at_50%_50%,rgba(52,211,153,0.2),transparent_60%)]" />
+      <div className="absolute bottom-4 left-4 h-2 w-24 animate-pulse rounded-full bg-emerald-500/30" />
+    </div>
+  );
+}
 
 export function AdvancedHeroBanner() {
   const mounted = useMounted();
@@ -134,19 +138,13 @@ export function AdvancedHeroBanner() {
           </motion.div>
         </div>
 
-        {/* Generative logistics visualization */}
-        <motion.div
-          initial={motionInitial}
-          animate="visible"
-          variants={slideInRight}
-          transition={{ delay: 0.2 }}
-          className="relative h-[220px] sm:h-[300px] md:h-[480px]"
-        >
+        {/* Generative logistics visualization — always visible on mobile (no opacity-0 flash) */}
+        <div className="relative h-[220px] sm:h-[300px] md:h-[480px]">
           <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-transparent to-indigo-500/10 blur-2xl" />
           <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-2xl shadow-emerald-500/10 backdrop-blur-sm">
             <HeroGenerativeScene className="relative h-full w-full" />
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Bottom fade */}

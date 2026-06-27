@@ -7,6 +7,8 @@ interface HeroGenerativeSceneProps {
   className?: string;
 }
 
+type SceneMode = "full" | "lite" | "static";
+
 type Hub = { x: number; y: number; pulse: number; radius: number };
 type RouteDot = { t: number; speed: number; route: number; glow: number };
 type Particle = {
@@ -41,15 +43,79 @@ function bezierPoint(
   };
 }
 
+function HeroStaticScene({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "relative h-full w-full overflow-hidden bg-gradient-to-br from-emerald-900/50 via-slate-900 to-indigo-900/40",
+        className,
+      )}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_25%,rgba(52,211,153,0.35),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_75%_75%,rgba(99,102,241,0.25),transparent_50%)]" />
+
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 400 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden
+      >
+        <defs>
+          <linearGradient id="route-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(52,211,153,0)" />
+            <stop offset="50%" stopColor="rgba(52,211,153,0.7)" />
+            <stop offset="100%" stopColor="rgba(129,140,248,0.4)" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M 30 160 C 100 60, 200 50, 370 120"
+          fill="none"
+          stroke="url(#route-grad)"
+          strokeWidth="2"
+          className="animate-pulse"
+        />
+        <path
+          d="M 50 50 C 150 120, 250 30, 350 80"
+          fill="none"
+          stroke="url(#route-grad)"
+          strokeWidth="1.5"
+          opacity="0.7"
+          className="animate-pulse [animation-delay:0.5s]"
+        />
+        <path
+          d="M 20 110 C 120 140, 200 90, 200 115"
+          fill="none"
+          stroke="url(#route-grad)"
+          strokeWidth="1.5"
+          opacity="0.6"
+          className="animate-pulse [animation-delay:1s]"
+        />
+        <circle cx="200" cy="115" r="6" fill="rgba(52,211,153,0.9)" className="animate-ping" />
+        <circle cx="200" cy="115" r="4" fill="#ecfdf5" />
+        <circle cx="70" cy="150" r="4" fill="rgba(52,211,153,0.8)" className="animate-pulse" />
+        <circle cx="330" cy="100" r="4" fill="rgba(129,140,248,0.9)" className="animate-pulse [animation-delay:0.7s]" />
+      </svg>
+
+      <div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1.5 backdrop-blur-sm">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+        </span>
+        <span className="text-[11px] font-medium text-emerald-200">Geo-routing active</span>
+      </div>
+    </div>
+  );
+}
+
 export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0.5, y: 0.5, active: false });
-  const [useStaticFallback, setUseStaticFallback] = useState(false);
+  const [mode, setMode] = useState<SceneMode | null>(null);
 
   useEffect(() => {
-    const mobile = window.matchMedia("(max-width: 767px)").matches;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setUseStaticFallback(mobile || reduced);
+    const mobile = window.matchMedia("(max-width: 767px)").matches;
+    setMode(reduced ? "static" : mobile ? "lite" : "full");
   }, []);
 
   const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -66,13 +132,14 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
   }, []);
 
   useEffect(() => {
-    if (useStaticFallback) return;
+    if (!mode || mode === "static") return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
+    const isLite = mode === "lite";
     let animId = 0;
     let w = 0;
     let h = 0;
@@ -108,25 +175,26 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
     }
 
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, isLite ? 1.5 : 2);
       w = canvas!.clientWidth;
       h = canvas!.clientHeight;
-      canvas!.width = w * dpr;
-      canvas!.height = h * dpr;
+      if (w === 0 || h === 0) return;
+
+      canvas!.width = Math.floor(w * dpr);
+      canvas!.height = Math.floor(h * dpr);
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       hubs = [
-        { x: w * 0.5, y: h * 0.52, pulse: 0, radius: 42 },
-        { x: w * 0.18, y: h * 0.68, pulse: 1.2, radius: 28 },
-        { x: w * 0.82, y: h * 0.35, pulse: 2.4, radius: 32 },
-        { x: w * 0.72, y: h * 0.78, pulse: 0.8, radius: 24 },
+        { x: w * 0.5, y: h * 0.52, pulse: 0, radius: isLite ? 28 : 42 },
+        { x: w * 0.18, y: h * 0.68, pulse: 1.2, radius: isLite ? 18 : 28 },
+        { x: w * 0.82, y: h * 0.35, pulse: 2.4, radius: isLite ? 20 : 32 },
+        { x: w * 0.72, y: h * 0.78, pulse: 0.8, radius: isLite ? 16 : 24 },
       ];
       routes = buildRoutes(w, h);
 
       particles.length = 0;
-      const isMobile = w < 768;
-      const count = isMobile
-        ? Math.min(80, Math.floor((w * h) / 5000))
+      const count = isLite
+        ? Math.min(45, Math.floor((w * h) / 8000))
         : Math.min(280, Math.floor((w * h) / 2200));
       for (let i = 0; i < count; i++) {
         particles.push({
@@ -135,14 +203,15 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
           vx: 0,
           vy: 0,
           life: Math.random(),
-          size: Math.random() * 1.8 + 0.4,
+          size: Math.random() * (isLite ? 1.4 : 1.8) + 0.4,
           hue: Math.random() > 0.65 ? 155 : 220 + Math.random() * 40,
         });
       }
 
       routeDots.length = 0;
       for (let r = 0; r < routes.length; r++) {
-        for (let i = 0; i < 3; i++) {
+        const dotsPerRoute = isLite ? 2 : 3;
+        for (let i = 0; i < dotsPerRoute; i++) {
           routeDots.push({
             t: Math.random(),
             speed: 0.0012 + Math.random() * 0.0018,
@@ -155,8 +224,9 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
 
     function drawAurora(t: number) {
       const g = ctx!.createRadialGradient(w * 0.5, h * 0.45, 0, w * 0.5, h * 0.5, w * 0.55);
-      g.addColorStop(0, `rgba(16, 185, 129, ${0.12 + Math.sin(t * 0.8) * 0.04})`);
-      g.addColorStop(0.45, `rgba(99, 102, 241, ${0.08 + Math.cos(t * 0.6) * 0.03})`);
+      const boost = isLite ? 1.4 : 1;
+      g.addColorStop(0, `rgba(16, 185, 129, ${(0.12 + Math.sin(t * 0.8) * 0.04) * boost})`);
+      g.addColorStop(0.45, `rgba(99, 102, 241, ${(0.08 + Math.cos(t * 0.6) * 0.03) * boost})`);
       g.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx!.fillStyle = g;
       ctx!.fillRect(0, 0, w, h);
@@ -164,7 +234,7 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
 
     function drawRoutes(t: number) {
       routes.forEach((route, idx) => {
-        const steps = 80;
+        const steps = isLite ? 40 : 80;
         ctx!.beginPath();
         for (let i = 0; i <= steps; i++) {
           const pt = bezierPoint(i / steps, route.p0, route.p1, route.p2, route.p3);
@@ -176,9 +246,11 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
         grad.addColorStop(0.5, `rgba(52, 211, 153, ${0.35 + Math.sin(t + idx) * 0.1})`);
         grad.addColorStop(1, "rgba(129, 140, 248, 0.15)");
         ctx!.strokeStyle = grad;
-        ctx!.lineWidth = 1.2;
-        ctx!.shadowBlur = 12;
-        ctx!.shadowColor = "rgba(52, 211, 153, 0.4)";
+        ctx!.lineWidth = isLite ? 1.5 : 1.2;
+        if (!isLite) {
+          ctx!.shadowBlur = 12;
+          ctx!.shadowColor = "rgba(52, 211, 153, 0.4)";
+        }
         ctx!.stroke();
         ctx!.shadowBlur = 0;
       });
@@ -209,7 +281,7 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
     function drawHubs(t: number) {
       hubs.forEach((hub) => {
         const pulse = (Math.sin(t * 2 + hub.pulse) + 1) * 0.5;
-        const rings = 3;
+        const rings = isLite ? 2 : 3;
         for (let i = 0; i < rings; i++) {
           const ringR = hub.radius + i * 18 + pulse * 12;
           const alpha = (0.25 - i * 0.07) * (1 - pulse * 0.3);
@@ -240,7 +312,7 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
         p.vx += Math.cos(angle) * speed * 0.08;
         p.vy += Math.sin(angle) * speed * 0.08;
 
-        if (mouseRef.current.active) {
+        if (!isLite && mouseRef.current.active) {
           const dx = mx - p.x;
           const dy = my - p.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -267,25 +339,28 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
         ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx!.fill();
 
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 90) {
-            const alpha = (1 - dist / 90) * 0.12;
-            ctx!.beginPath();
-            ctx!.moveTo(p.x, p.y);
-            ctx!.lineTo(p2.x, p2.y);
-            ctx!.strokeStyle = `rgba(129, 140, 248, ${alpha})`;
-            ctx!.lineWidth = 0.6;
-            ctx!.stroke();
+        if (!isLite) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const p2 = particles[j];
+            const dx = p.x - p2.x;
+            const dy = p.y - p2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 90) {
+              const alpha = (1 - dist / 90) * 0.12;
+              ctx!.beginPath();
+              ctx!.moveTo(p.x, p.y);
+              ctx!.lineTo(p2.x, p2.y);
+              ctx!.strokeStyle = `rgba(129, 140, 248, ${alpha})`;
+              ctx!.lineWidth = 0.6;
+              ctx!.stroke();
+            }
           }
         }
       });
     }
 
     function drawScanLine(t: number) {
+      if (isLite) return;
       const y = ((t * 40) % (h + 80)) - 40;
       const grad = ctx!.createLinearGradient(0, y - 30, 0, y + 30);
       grad.addColorStop(0, "rgba(52, 211, 153, 0)");
@@ -295,19 +370,24 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
       ctx!.fillRect(0, y - 30, w, 60);
     }
 
-    function draw(t: number) {
-      ctx!.clearRect(0, 0, w, h);
-      drawAurora(t);
-      drawRoutes(t);
-      drawParticles(t);
-      drawRouteDots();
-      drawHubs(t);
-      drawScanLine(t);
-      animId = requestAnimationFrame(() => draw(performance.now() * 0.001));
+    let lastFrame = 0;
+    function draw(now: number) {
+      const t = now * 0.001;
+      if (!isLite || now - lastFrame > 33) {
+        lastFrame = now;
+        ctx!.clearRect(0, 0, w, h);
+        drawAurora(t);
+        drawRoutes(t);
+        drawParticles(t);
+        drawRouteDots();
+        drawHubs(t);
+        drawScanLine(t);
+      }
+      animId = requestAnimationFrame(draw);
     }
 
     resize();
-    draw(0);
+    if (w > 0 && h > 0) draw(0);
 
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
@@ -316,21 +396,14 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
       cancelAnimationFrame(animId);
       ro.disconnect();
     };
-  }, [useStaticFallback]);
+  }, [mode]);
 
-  if (useStaticFallback) {
-    return (
-      <div
-        className={cn(
-          "relative h-full w-full overflow-hidden bg-gradient-to-br from-emerald-950/80 via-slate-950 to-indigo-950/60",
-          className,
-        )}
-      >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(52,211,153,0.25),transparent_55%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_70%,rgba(99,102,241,0.15),transparent_50%)]" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/15 blur-[60px]" />
-      </div>
-    );
+  if (mode === null) {
+    return <HeroStaticScene className={className} />;
+  }
+
+  if (mode === "static") {
+    return <HeroStaticScene className={className} />;
   }
 
   return (
@@ -341,7 +414,6 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
     >
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-      {/* Glass HUD overlays — hidden on small phones to reduce clutter */}
       <div className="pointer-events-none absolute inset-0 hidden sm:block">
         <div className="absolute left-[8%] top-[18%] rounded-xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur-md">
           <p className="text-[10px] font-medium uppercase tracking-widest text-emerald-300/80">Live Fleet</p>
@@ -360,7 +432,16 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
         </div>
       </div>
 
-      {/* Center glow */}
+      {mode === "lite" && (
+        <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/15 px-2.5 py-1 backdrop-blur-sm sm:hidden">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          </span>
+          <span className="text-[10px] font-medium text-emerald-200">Live routing</span>
+        </div>
+      )}
+
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/20 blur-[80px]" />
     </div>
   );
