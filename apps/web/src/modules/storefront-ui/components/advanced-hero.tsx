@@ -9,12 +9,12 @@ import { MagneticButton } from "../animations/magnetic-button";
 import { fadeInUp, slideInLeft } from "../animations/scroll-reveal";
 import { useMounted } from "@/hooks/use-mounted";
 
-const HeroGenerativeScene = dynamic(
-  () => import("../effects/hero-generative-scene").then((m) => m.HeroGenerativeScene),
+const HeroDropshipVisual = dynamic(
+  () => import("../three/hero-dropship-visual").then((m) => m.HeroDropshipVisual),
   {
     ssr: false,
     loading: () => <HeroStaticLoading />,
-  }
+  },
 );
 
 function HeroStaticLoading() {
@@ -138,11 +138,11 @@ export function AdvancedHeroBanner() {
           </motion.div>
         </div>
 
-        {/* Generative logistics visualization — always visible on mobile (no opacity-0 flash) */}
-        <div className="relative h-[220px] sm:h-[300px] md:h-[480px]">
+        {/* Dropshipping 3D visualization */}
+        <div className="relative h-[240px] sm:h-[320px] md:h-[480px]">
           <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-transparent to-indigo-500/10 blur-2xl" />
-          <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-2xl shadow-emerald-500/10 backdrop-blur-sm">
-            <HeroGenerativeScene className="relative h-full w-full" />
+          <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-950/40 to-black/30 shadow-2xl shadow-emerald-500/10 backdrop-blur-sm">
+            <HeroDropshipVisual className="relative h-full w-full" />
           </div>
         </div>
       </div>

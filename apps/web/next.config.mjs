@@ -11,7 +11,7 @@ const productionApiBase = `${PRODUCTION_API_ORIGIN}/api/v1`;
 const nextConfig = {
   // Required for npm workspaces — hoisted deps live in repo root node_modules.
   outputFileTracingRoot: path.join(__dirname, "../.."),
-  transpilePackages: ["three"],
+  transpilePackages: ["three", "@react-three/fiber", "@react-three/drei"],
   env: {
     NEXT_PUBLIC_API_URL: isVercel
       ? process.env.NEXT_PUBLIC_API_URL?.startsWith("http")

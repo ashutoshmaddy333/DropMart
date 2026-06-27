@@ -5,5 +5,7 @@ export { PageTransition } from "./animations/page-transition";
 export { ParticleField } from "./effects/particle-field";
 export { GradientMesh } from "./effects/gradient-mesh";
 export { HeroGenerativeScene } from "./effects/hero-generative-scene";
+export { Hero3DScene, HeroDropshipScene } from "./three/hero-3d-scene";
+export { HeroDropshipVisual } from "./three/hero-dropship-visual";
 export { AdvancedHeroBanner } from "./components/advanced-hero";
 export { AdvancedTrustBadges, AdvancedCategoryGrid } from "./components/advanced-sections";
