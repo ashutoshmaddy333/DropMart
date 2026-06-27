@@ -35,9 +35,10 @@ export function HomePageView({
     async function load() {
       if (initialAllProducts.length > 0) {
         setLoading(false);
-      } else {
-        setLoading(true);
+        return;
       }
+
+      setLoading(true);
       try {
         const [all, featured, flashDeals] = await Promise.all([
           apiFetch<ApiProduct[]>("/products", { timeoutMs: 90_000 }),

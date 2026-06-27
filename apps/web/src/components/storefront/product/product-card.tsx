@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,11 +26,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
       <Card className="group flex h-full flex-col overflow-hidden border-border/60 bg-card transition-all hover:border-brand/30 hover:shadow-glow">
         <Link href={`/products/${product.slug}`} className="block">
           <div className="relative aspect-square overflow-hidden bg-muted">
-            <motion.div
-              whileHover={{ scale: 1.08 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="relative h-full w-full"
-            >
+            <div className="relative h-full w-full md:transition-transform md:duration-500 md:ease-out md:group-hover:scale-[1.08]">
               <Image
                 src={product.images[0]}
                 alt={product.name}
@@ -40,7 +35,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
                 className="object-cover"
                 sizes="(max-width: 768px) 50vw, 25vw"
               />
-            </motion.div>
+            </div>
             <div className="absolute left-3 top-3 flex flex-col gap-1.5">
               {product.isFlashDeal && (
                 <Badge className="bg-red-600 text-white shadow-lg shadow-red-600/30 hover:bg-red-600">
@@ -53,16 +48,14 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
                 </Badge>
               )}
             </div>
-            <motion.button
+            <button
               type="button"
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.95 }}
-              className="absolute right-3 top-3 rounded-full bg-white/90 p-2 opacity-0 shadow-lg backdrop-blur-sm transition-opacity group-hover:opacity-100"
+              className="absolute right-3 top-3 hidden rounded-full bg-white/90 p-2 opacity-0 shadow-lg backdrop-blur-sm transition-opacity group-hover:opacity-100 md:block"
               aria-label="Add to wishlist"
               onClick={(e) => e.preventDefault()}
             >
               <Icon name="heart" size={18} />
-            </motion.button>
+            </button>
           </div>
         </Link>
         <CardContent className="flex flex-1 flex-col space-y-2 p-4">

@@ -23,6 +23,7 @@ import { useCartStore } from "@/modules/cart/store/cart-store";
 import { useMounted } from "@/hooks/use-mounted";
 import { SITE_NAME, NAV_CATEGORIES, CONTACT } from "@/lib/constants";
 import { SocialLinks } from "@/components/shared/social-links";
+import { RazorpayIcon, StripeIcon } from "@/components/shared/payment-brand-icons";
 import { isAdminRole, getRoleHomePath } from "@/lib/auth/roles";
 import { CartDrawer } from "@/components/storefront/cart/cart-drawer";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -198,8 +199,8 @@ export function StorefrontFooter() {
             India&apos;s smart dropshipping marketplace. Fast delivery from nearby warehouses.
           </p>
           <div className="flex items-center gap-3">
-            <Icon name="razorpay" size={60} className="h-6 w-[60px] object-contain" alt="Razorpay" />
-            <Icon name="stripe" size={48} className="h-6 w-12 object-contain" alt="Stripe" />
+            <RazorpayIcon />
+            <StripeIcon />
           </div>
           <SocialLinks size={20} className="pt-1" />
         </div>

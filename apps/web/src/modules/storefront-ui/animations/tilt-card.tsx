@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,19 @@ interface TiltCardProps {
   scale?: number;
 }
 
+function useDisableTilt() {
+  const [disabled, setDisabled] = useState(true);
+
+  useEffect(() => {
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const narrow = window.matchMedia("(max-width: 768px)").matches;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setDisabled(coarse || narrow || reduced);
+  }, []);
+
+  return disabled;
+}
+
 export function TiltCard({
   children,
   className,
@@ -19,6 +32,7 @@ export function TiltCard({
   glare = true,
   scale = 1.02,
 }: TiltCardProps) {
+  const disableTilt = useDisableTilt();
   const ref = useRef<HTMLDivElement>(null);
   const [hovering, setHovering] = useState(false);
 
@@ -42,6 +56,10 @@ export function TiltCard({
     const rect = ref.current.getBoundingClientRect();
     x.set((e.clientX - rect.left) / rect.width);
     y.set((e.clientY - rect.top) / rect.height);
+  }
+
+  if (disableTilt) {
+    return <div className={cn("relative", className)}>{children}</div>;
   }
 
   return (

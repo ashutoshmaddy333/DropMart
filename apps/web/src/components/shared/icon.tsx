@@ -73,6 +73,7 @@ export function Icon({ name, size = 20, className, alt }: IconProps) {
         alt={alt ?? name}
         width={size}
         height={size}
+        unoptimized
         className={cn(
           "shrink-0",
           !BRAND_ICONS.includes(name) && "dark:invert",
