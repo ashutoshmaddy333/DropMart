@@ -27,7 +27,7 @@ export function AdvancedHeroBanner() {
   const motionInitial = mounted ? "hidden" : false;
 
   return (
-    <section className="relative min-h-[540px] overflow-hidden rounded-3xl hero-bg md:min-h-[620px]">
+    <section className="relative min-h-[420px] overflow-hidden rounded-2xl hero-bg sm:min-h-[540px] sm:rounded-3xl md:min-h-[620px]">
       {/* Animated gradient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-32 -top-32 h-96 w-96 animate-pulse-glow rounded-full bg-emerald-500/20 blur-3xl" />
@@ -47,7 +47,7 @@ export function AdvancedHeroBanner() {
       {/* Top shine */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-6 py-16 md:grid-cols-2 md:py-20">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-4 py-10 sm:gap-8 sm:px-6 sm:py-16 md:grid-cols-2 md:py-20">
         {/* Copy */}
         <div className="relative z-10 space-y-6">
           <motion.div
@@ -140,7 +140,7 @@ export function AdvancedHeroBanner() {
           animate="visible"
           variants={slideInRight}
           transition={{ delay: 0.2 }}
-          className="relative h-[320px] md:h-[480px]"
+          className="relative h-[220px] sm:h-[300px] md:h-[480px]"
         >
           <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-transparent to-indigo-500/10 blur-2xl" />
           <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-2xl shadow-emerald-500/10 backdrop-blur-sm">

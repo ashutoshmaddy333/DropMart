@@ -15,7 +15,7 @@ export default function StorefrontLayout({
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col page-mesh">
+    <div className="flex min-h-screen flex-col overflow-x-hidden page-mesh">
       <StorefrontHeader />
       <main className="flex-1">
         <PageTransition>{children}</PageTransition>

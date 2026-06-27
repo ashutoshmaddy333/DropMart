@@ -1,3 +1,7 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return <div className="page-mesh min-h-screen">{children}</div>;
+  return (
+    <div className="page-mesh min-h-screen overflow-x-hidden">
+      {children}
+    </div>
+  );
 }

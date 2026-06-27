@@ -1,52 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchMe, refreshSession } from "@/store/slices/authSlice";
 import { fetchMasters } from "@/store/slices/mastersSlice";
 import { fetchUnreadCount } from "@/store/slices/notificationsSlice";
-import { useMounted } from "@/hooks/use-mounted";
 
+/** Bootstraps auth/masters in the background — never blocks page render. */
 export function AppInitializer({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  const { token, initialized, loading } = useAppSelector((s) => s.auth);
-  const mounted = useMounted();
-  const [sessionChecked, setSessionChecked] = useState(false);
+  const { token } = useAppSelector((s) => s.auth);
 
   useEffect(() => {
     dispatch(fetchMasters());
 
     async function initSession() {
-      if (token) {
-        const result = await dispatch(fetchMe());
-        if (fetchMe.fulfilled.match(result)) {
-          const role = result.payload.user.role;
-          if (role === "admin" || role === "superadmin" || role === "supplier" || role === "delivery") {
-            dispatch(fetchUnreadCount());
+      try {
+        if (token) {
+          const result = await dispatch(fetchMe());
+          if (fetchMe.fulfilled.match(result)) {
+            const role = result.payload.user.role;
+            if (role === "admin" || role === "superadmin" || role === "supplier" || role === "delivery") {
+              dispatch(fetchUnreadCount());
+            }
+          }
+        } else {
+          const refreshed = await dispatch(refreshSession());
+          if (refreshSession.fulfilled.match(refreshed)) {
+            const role = refreshed.payload.user.role;
+            if (role === "admin" || role === "superadmin" || role === "supplier" || role === "delivery") {
+              dispatch(fetchUnreadCount());
+            }
           }
         }
-      } else {
-        const refreshed = await dispatch(refreshSession());
-        if (refreshSession.fulfilled.match(refreshed)) {
-          const role = refreshed.payload.user.role;
-          if (role === "admin" || role === "superadmin" || role === "supplier" || role === "delivery") {
-            dispatch(fetchUnreadCount());
-          }
-        }
+      } catch {
+        // Session bootstrap is best-effort; pages must render without it.
       }
-      setSessionChecked(true);
     }
 
-    initSession();
+    void initSession();
   }, [dispatch, token]);
-
-  if (mounted && !sessionChecked && loading && !initialized) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-      </div>
-    );
-  }
 
   return <>{children}</>;
 }

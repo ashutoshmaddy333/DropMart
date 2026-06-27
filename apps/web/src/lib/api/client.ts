@@ -58,9 +58,14 @@ async function tryRefreshTokens(): Promise<boolean> {
 
 export async function apiFetch<T>(
   path: string,
-  options: RequestInit & { token?: string | null; skipCsrf?: boolean; _retry?: boolean } = {},
+  options: RequestInit & {
+    token?: string | null;
+    skipCsrf?: boolean;
+    _retry?: boolean;
+    timeoutMs?: number;
+  } = {},
 ): Promise<T> {
-  const { token, skipCsrf, _retry, ...init } = options;
+  const { token, skipCsrf, _retry, timeoutMs = 0, ...init } = options;
   const method = (init.method ?? "GET").toUpperCase();
   const isMutating = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
@@ -80,11 +85,31 @@ export async function apiFetch<T>(
     }
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
-    credentials: "include",
-  });
+  const controller = timeoutMs > 0 ? new AbortController() : null;
+  const timer =
+    controller && timeoutMs > 0
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : null;
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers,
+      credentials: "include",
+      signal: controller?.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new ApiError(
+        408,
+        "Request timed out — the server may be waking up. Wait a moment and tap Resend.",
+      );
+    }
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 
   if (res.status === 401 && !_retry && !path.includes("/auth/login") && !path.includes("/auth/refresh")) {
     const refreshed = await tryRefreshTokens();

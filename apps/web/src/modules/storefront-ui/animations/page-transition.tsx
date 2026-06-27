@@ -1,24 +1,13 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { useMounted } from "@/hooks/use-mounted";
 
+/** Plain wrapper — AnimatePresence "wait" caused blank screens on mobile Safari. */
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const mounted = useMounted();
-
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial={mounted ? { opacity: 0, y: 12 } : false}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -12 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <div key={pathname} className="min-h-0 w-full overflow-x-hidden">
+      {children}
+    </div>
   );
 }

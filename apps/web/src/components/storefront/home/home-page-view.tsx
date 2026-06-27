@@ -28,9 +28,9 @@ export function HomePageView() {
       setLoading(true);
       try {
         const [all, featured, flashDeals] = await Promise.all([
-          apiFetch<ApiProduct[]>("/products"),
-          apiFetch<ApiProduct[]>("/products?featured=true"),
-          apiFetch<ApiProduct[]>("/products?flashDeals=true"),
+          apiFetch<ApiProduct[]>("/products", { timeoutMs: 60_000 }),
+          apiFetch<ApiProduct[]>("/products?featured=true", { timeoutMs: 60_000 }),
+          apiFetch<ApiProduct[]>("/products?flashDeals=true", { timeoutMs: 60_000 }),
         ]);
         if (cancelled) return;
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion, type HTMLMotionProps, type Variants } from "framer-motion";
-import { useMounted } from "@/hooks/use-mounted";
 
 export const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -54,13 +53,11 @@ export function ScrollReveal({
   className,
   ...props
 }: ScrollRevealProps) {
-  const mounted = useMounted();
-
   return (
     <motion.div
-      initial={mounted ? "hidden" : false}
+      initial={false}
       whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
+      viewport={{ once: true, margin: "0px 0px -40px 0px" }}
       variants={directionVariants[direction]}
       transition={{ delay }}
       className={className}
@@ -78,13 +75,11 @@ export function StaggerGrid({
   children: React.ReactNode;
   className?: string;
 }) {
-  const mounted = useMounted();
-
   return (
     <motion.div
-      initial={mounted ? "hidden" : false}
+      initial={false}
       whileInView="visible"
-      viewport={{ once: true, margin: "-60px" }}
+      viewport={{ once: true, margin: "0px 0px -40px 0px" }}
       variants={staggerContainer}
       className={className}
     >

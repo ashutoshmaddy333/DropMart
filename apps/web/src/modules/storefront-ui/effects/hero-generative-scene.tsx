@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface HeroGenerativeSceneProps {
@@ -44,6 +44,13 @@ function bezierPoint(
 export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0.5, y: 0.5, active: false });
+  const [useStaticFallback, setUseStaticFallback] = useState(false);
+
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 767px)").matches;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setUseStaticFallback(mobile || reduced);
+  }, []);
 
   const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -59,6 +66,8 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
   }, []);
 
   useEffect(() => {
+    if (useStaticFallback) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: true });
@@ -115,7 +124,10 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
       routes = buildRoutes(w, h);
 
       particles.length = 0;
-      const count = Math.min(280, Math.floor((w * h) / 2200));
+      const isMobile = w < 768;
+      const count = isMobile
+        ? Math.min(80, Math.floor((w * h) / 5000))
+        : Math.min(280, Math.floor((w * h) / 2200));
       for (let i = 0; i < count; i++) {
         particles.push({
           x: Math.random() * w,
@@ -304,7 +316,22 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
       cancelAnimationFrame(animId);
       ro.disconnect();
     };
-  }, []);
+  }, [useStaticFallback]);
+
+  if (useStaticFallback) {
+    return (
+      <div
+        className={cn(
+          "relative h-full w-full overflow-hidden bg-gradient-to-br from-emerald-950/80 via-slate-950 to-indigo-950/60",
+          className,
+        )}
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(52,211,153,0.25),transparent_55%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_70%,rgba(99,102,241,0.15),transparent_50%)]" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/15 blur-[60px]" />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -314,8 +341,8 @@ export function HeroGenerativeScene({ className }: HeroGenerativeSceneProps) {
     >
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-      {/* Glass HUD overlays */}
-      <div className="pointer-events-none absolute inset-0">
+      {/* Glass HUD overlays — hidden on small phones to reduce clutter */}
+      <div className="pointer-events-none absolute inset-0 hidden sm:block">
         <div className="absolute left-[8%] top-[18%] rounded-xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur-md">
           <p className="text-[10px] font-medium uppercase tracking-widest text-emerald-300/80">Live Fleet</p>
           <p className="text-lg font-bold tabular-nums text-white">847<span className="text-sm text-emerald-400"> km/h</span></p>

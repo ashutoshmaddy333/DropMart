@@ -35,7 +35,7 @@ export function RegisterCustomerForm() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md">
+    <div className="mx-auto w-full max-w-md px-1 sm:px-0">
       <div className="mb-8 text-center">
         <Link href="/" className="inline-flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand shadow-glow">
