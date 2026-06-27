@@ -7,8 +7,6 @@ import {
 } from "./auth-session";
 import { getClientApiBase } from "./api-base-url";
 
-const API_BASE = getClientApiBase();
-
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -30,7 +28,7 @@ async function tryRefreshTokens(): Promise<boolean> {
 
   refreshPromise = (async () => {
     try {
-      const res = await fetch(`${API_BASE}/auth/refresh`, {
+      const res = await fetch(`${getClientApiBase()}/auth/refresh`, {
         method: "POST",
         credentials: "include",
       });
@@ -93,7 +91,7 @@ export async function apiFetch<T>(
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await fetch(`${getClientApiBase()}${path}`, {
       ...init,
       headers,
       credentials: "include",
@@ -123,7 +121,15 @@ export async function apiFetch<T>(
     throw new ApiError(res.status, body.message ?? "Request failed");
   }
 
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError(
+      502,
+      "Invalid API response — the server may be waking up. Please try again in a moment.",
+    );
+  }
 }
 
-export { API_BASE, setAuthSession, clearAuthSession };
+export { getClientApiBase as API_BASE, setAuthSession, clearAuthSession };

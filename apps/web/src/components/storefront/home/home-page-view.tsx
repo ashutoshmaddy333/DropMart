@@ -15,22 +15,34 @@ import { toStorefrontProduct, type ApiProduct } from "@/lib/api/products";
 import type { Product } from "@/modules/products/types";
 import { NAV_CATEGORIES } from "@/lib/constants";
 
-export function HomePageView() {
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [flashDealProducts, setFlashDealProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+export function HomePageView({
+  initialAllProducts = [],
+  initialFeaturedProducts = [],
+  initialFlashDealProducts = [],
+}: {
+  initialAllProducts?: Product[];
+  initialFeaturedProducts?: Product[];
+  initialFlashDealProducts?: Product[];
+}) {
+  const [allProducts, setAllProducts] = useState<Product[]>(initialAllProducts);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(initialFeaturedProducts);
+  const [flashDealProducts, setFlashDealProducts] = useState<Product[]>(initialFlashDealProducts);
+  const [loading, setLoading] = useState(initialAllProducts.length === 0);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      setLoading(true);
+      if (initialAllProducts.length > 0) {
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       try {
         const [all, featured, flashDeals] = await Promise.all([
-          apiFetch<ApiProduct[]>("/products", { timeoutMs: 60_000 }),
-          apiFetch<ApiProduct[]>("/products?featured=true", { timeoutMs: 60_000 }),
-          apiFetch<ApiProduct[]>("/products?flashDeals=true", { timeoutMs: 60_000 }),
+          apiFetch<ApiProduct[]>("/products", { timeoutMs: 90_000 }),
+          apiFetch<ApiProduct[]>("/products?featured=true", { timeoutMs: 90_000 }),
+          apiFetch<ApiProduct[]>("/products?flashDeals=true", { timeoutMs: 90_000 }),
         ]);
         if (cancelled) return;
 
@@ -50,7 +62,7 @@ export function HomePageView() {
             : mappedAll.filter((p) => p.isFlashDeal).slice(0, 4),
         );
       } catch {
-        if (!cancelled) {
+        if (!cancelled && initialAllProducts.length === 0) {
           setAllProducts([]);
           setFeaturedProducts([]);
           setFlashDealProducts([]);
@@ -64,7 +76,7 @@ export function HomePageView() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialAllProducts.length]);
 
   return (
     <div className="mx-auto max-w-7xl space-y-20 px-4 py-8">
@@ -136,7 +148,7 @@ export function HomePageView() {
             </Button>
           </div>
         </ScrollReveal>
-        {loading ? (
+        {loading && allProducts.length === 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="h-72 animate-pulse rounded-xl bg-muted" />

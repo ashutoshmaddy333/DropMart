@@ -13,6 +13,7 @@ import { NAV_CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface ProductsListingProps {
+  initialProducts?: Product[];
   initialQuery?: string;
   initialDeals?: boolean;
   initialCategory?: string;
@@ -118,6 +119,7 @@ function ProductsFilters({
 }
 
 export function ProductsListing({
+  initialProducts = [],
   initialQuery,
   initialDeals,
   initialCategory,
@@ -125,9 +127,11 @@ export function ProductsListing({
   const [category, setCategory] = useState(initialCategory ?? "all");
   const [sort, setSort] = useState<SortOption>("newest");
   const [priceRange, setPriceRange] = useState<PriceRange>("all");
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
+  const [loading, setLoading] = useState(initialProducts.length === 0);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const search = new URLSearchParams();
@@ -135,12 +139,32 @@ export function ProductsListing({
     if (initialDeals) search.set("flashDeals", "true");
     const qs = search.toString();
 
+    let cancelled = false;
     setLoading(true);
-    apiFetch<ApiProduct[]>(`/products${qs ? `?${qs}` : ""}`)
-      .then((data) => setAllProducts(data.map(toStorefrontProduct)))
-      .catch(() => setAllProducts([]))
-      .finally(() => setLoading(false));
-  }, [initialQuery, initialDeals]);
+    setLoadError(null);
+
+    apiFetch<ApiProduct[]>(`/products${qs ? `?${qs}` : ""}`, { timeoutMs: 90_000 })
+      .then((data) => {
+        if (cancelled) return;
+        setAllProducts(data.map(toStorefrontProduct));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        if (initialProducts.length === 0) setAllProducts([]);
+        setLoadError(
+          err instanceof Error
+            ? err.message
+            : "Could not load products. The server may be waking up — try again.",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialQuery, initialDeals, reloadKey, initialProducts.length]);
 
   const products = useMemo(() => {
     let result = [...allProducts];
@@ -180,8 +204,24 @@ export function ProductsListing({
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            {loading ? "Loading..." : `${products.length} product${products.length !== 1 ? "s" : ""} found`}
+            {loading && allProducts.length === 0
+              ? "Loading products…"
+              : `${products.length} product${products.length !== 1 ? "s" : ""} found`}
           </p>
+          {loadError && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
+              <span>{loadError}</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7"
+                onClick={() => setReloadKey((k) => k + 1)}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
         </div>
       </ScrollReveal>
 
@@ -240,7 +280,7 @@ export function ProductsListing({
         </aside>
 
         <div className="lg:col-span-3">
-          {loading ? (
+          {loading && allProducts.length === 0 ? (
             <div className="flex items-center justify-center py-20">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
             </div>

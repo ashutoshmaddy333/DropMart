@@ -13,22 +13,25 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../.."),
   transpilePackages: ["three"],
   env: {
-    NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL ?? (isVercel ? productionApiBase : "/api/v1"),
+    NEXT_PUBLIC_API_URL: isVercel
+      ? process.env.NEXT_PUBLIC_API_URL?.startsWith("http")
+        ? process.env.NEXT_PUBLIC_API_URL
+        : productionApiBase
+      : (process.env.NEXT_PUBLIC_API_URL ?? "/api/v1"),
     NEXT_PUBLIC_WS_URL:
       process.env.NEXT_PUBLIC_WS_URL ?? (isVercel ? PRODUCTION_API_ORIGIN : undefined),
   },
   async rewrites() {
-    // Local dev only — production calls Render API directly (no serverless proxy).
-    if (isVercel || process.env.NODE_ENV === "production") {
-      return [];
-    }
+    const apiOrigin =
+      process.env.API_PROXY_URL?.replace(/\/$/, "") ??
+      (isVercel || process.env.NODE_ENV === "production"
+        ? PRODUCTION_API_ORIGIN
+        : "http://localhost:4000");
 
-    const apiUrl = process.env.API_PROXY_URL?.replace(/\/$/, "") ?? "http://localhost:4000";
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${apiUrl}/api/v1/:path*`,
+        destination: `${apiOrigin}/api/v1/:path*`,
       },
     ];
   },
