@@ -4,34 +4,24 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
 
-const HeroPhone3DScene = dynamic(
-  () => import("./hero-phone-3d-scene").then((m) => m.HeroPhone3DScene),
+const Hero3DScene = dynamic(
+  () => import("./hero-3d-scene").then((m) => m.Hero3DScene),
   { ssr: false },
 );
 
-function HeroPhoneFallback() {
+const HeroGenerativeScene = dynamic(
+  () => import("../effects/hero-generative-scene").then((m) => m.HeroGenerativeScene),
+  { ssr: false },
+);
+
+function HeroVisualLoading() {
   return (
-    <div className="relative flex h-full w-full items-center justify-center">
-      <div className="relative w-[140px] rounded-[2rem] border border-white/10 bg-[#1a1a1a] p-2 shadow-2xl shadow-emerald-500/10 sm:w-[168px]">
-        <div className="aspect-[9/19] overflow-hidden rounded-[1.5rem] bg-[#0d0d0d]">
-          <div className="mx-auto mt-3 h-4 w-16 rounded-full bg-black" />
-          <div className="mx-3 mt-5 rounded-2xl border border-white/10 bg-[#1c1c1e] p-3">
-            <div className="flex gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-xs text-white">
-                🛒
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-white">Order placed</p>
-                <p className="text-[10px] text-gray-500">Payment confirmed</p>
-              </div>
-            </div>
-            <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full w-[65%] animate-pulse rounded-full bg-emerald-500" />
-            </div>
-          </div>
-        </div>
+    <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-emerald-900/40 via-slate-900 to-indigo-900/30">
+      <div className="absolute inset-0 animate-pulse bg-[radial-gradient(ellipse_at_50%_50%,rgba(52,211,153,0.2),transparent_60%)]" />
+      <div className="absolute bottom-4 left-4 flex items-center gap-2">
+        <div className="h-2 w-2 animate-ping rounded-full bg-emerald-400" />
+        <div className="h-2 w-28 animate-pulse rounded-full bg-emerald-500/30" />
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_60%,rgba(16,185,129,0.15),transparent_65%)]" />
     </div>
   );
 }
@@ -46,7 +36,7 @@ function canUseWebGL() {
   }
 }
 
-type VisualMode = "3d-full" | "3d-lite" | "fallback" | "loading";
+type VisualMode = "3d-full" | "3d-lite" | "canvas" | "loading";
 
 export function HeroDropshipVisual({ className }: { className?: string }) {
   const [mode, setMode] = useState<VisualMode>("loading");
@@ -57,7 +47,7 @@ export function HeroDropshipVisual({ className }: { className?: string }) {
     const webgl = canUseWebGL();
 
     if (reduced || !webgl) {
-      setMode("fallback");
+      setMode("canvas");
     } else if (mobile) {
       setMode("3d-lite");
     } else {
@@ -66,21 +56,36 @@ export function HeroDropshipVisual({ className }: { className?: string }) {
   }, []);
 
   if (mode === "loading") {
-    return <HeroPhoneFallback />;
+    return <HeroVisualLoading />;
   }
 
-  if (mode === "fallback") {
-    return (
-      <div className={cn("relative h-full w-full", className)}>
-        <HeroPhoneFallback />
-      </div>
-    );
+  if (mode === "canvas") {
+    return <HeroGenerativeScene className={cn("h-full w-full", className)} />;
   }
 
   return (
     <div className={cn("relative h-full w-full", className)}>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_55%,rgba(16,185,129,0.12),transparent_60%)]" />
-      <HeroPhone3DScene className="h-full w-full" lite={mode === "3d-lite"} />
+      <Hero3DScene className="h-full w-full" lite={mode === "3d-lite"} />
+      {/* HUD labels */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-3 top-3 rounded-lg border border-white/10 bg-black/30 px-2 py-1 backdrop-blur-sm sm:left-4 sm:top-4 sm:px-3 sm:py-1.5">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-emerald-300/90 sm:text-[10px]">
+            Supplier
+          </p>
+        </div>
+        <div className="absolute bottom-3 right-3 rounded-lg border border-white/10 bg-black/30 px-2 py-1 backdrop-blur-sm sm:bottom-4 sm:right-4 sm:px-3 sm:py-1.5">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-indigo-300/90 sm:text-[10px]">
+            Customer
+          </p>
+        </div>
+        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 backdrop-blur-sm">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          </span>
+          <span className="text-[10px] font-medium text-emerald-200">Dropship route live</span>
+        </div>
+      </div>
     </div>
   );
 }

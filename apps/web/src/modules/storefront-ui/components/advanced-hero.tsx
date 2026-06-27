@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/shared/icon";
 import { MagneticButton } from "../animations/magnetic-button";
 import { fadeInUp, slideInLeft } from "../animations/scroll-reveal";
 import { useMounted } from "@/hooks/use-mounted";
@@ -57,13 +58,11 @@ export function AdvancedHeroBanner() {
             initial={motionInitial}
             animate="visible"
             variants={fadeInUp}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-slate-300 backdrop-blur-md"
+            className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-1.5 text-sm text-emerald-300 backdrop-blur-md"
           >
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </span>
-            Live Delivery
+            <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+            <Icon name="bolt" size={14} className="invert" />
+            Flash Sale — Up to 60% Off
           </motion.div>
 
           <motion.h1
@@ -85,7 +84,7 @@ export function AdvancedHeroBanner() {
             transition={{ delay: 0.2 }}
             className="max-w-md text-base leading-relaxed text-slate-300 md:text-lg"
           >
-            Premium products at your door. Track every step in real time — from warehouse to you.
+            Geo-boosted delivery from nearby warehouses. Premium products at dropship prices across India.
           </motion.p>
 
           <motion.div
@@ -125,12 +124,12 @@ export function AdvancedHeroBanner() {
             className="flex gap-6 pt-2 md:gap-10"
           >
             {[
-              { value: "2–5", label: "Day Delivery" },
+              { value: "12+", label: "Products" },
+              { value: "2-5", label: "Day Delivery" },
               { value: "4.8★", label: "Rating" },
-              { value: "60%", label: "Flash Deals" },
             ].map((stat) => (
               <div key={stat.label} className="border-l border-white/10 pl-4 first:border-0 first:pl-0">
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                <p className="text-2xl font-bold text-brand">{stat.value}</p>
                 <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
                   {stat.label}
                 </p>
@@ -139,9 +138,12 @@ export function AdvancedHeroBanner() {
           </motion.div>
         </div>
 
-        {/* 3D phone — order tracking visual */}
-        <div className="relative h-[260px] sm:h-[340px] md:h-[460px]">
-          <HeroDropshipVisual className="relative h-full w-full" />
+        {/* Dropshipping 3D visualization */}
+        <div className="relative h-[240px] sm:h-[320px] md:h-[480px]">
+          <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-transparent to-indigo-500/10 blur-2xl" />
+          <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-950/40 to-black/30 shadow-2xl shadow-emerald-500/10 backdrop-blur-sm">
+            <HeroDropshipVisual className="relative h-full w-full" />
+          </div>
         </div>
       </div>
 
